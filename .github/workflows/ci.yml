@@ -21,7 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - uses: Didstopia/SwiftAction@v1.0.2
+    - uses: fwal/setup-swift@master
       with:
-        swift-action: 'test --generate-linuxmain'
-        swift-action: 'test'
+        swift-version: '5.2.0'
+    - name: Run tests
+      run: swift test --generate-linuxmain && swift test
