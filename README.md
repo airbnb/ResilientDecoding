@@ -1,8 +1,23 @@
 # Resilient Decoding
 
-## Purpose
+## Introduction
 
 This package defines mechanisms to partially recover from errors when decoding `Decodable` types. It also aims to provide an ergonomic API for inspecting decoding errors during development and reporting them in production.
+
+More details follow, but here is a glimpse of what this package enables:
+```swift
+struct Foo: Decodable {
+  @Resilient var array: [Int]
+  @Resilient var value: Int?
+}
+let foo = try JSONDecoder().decode(Foo.self, from: """
+  {
+    "array": [1, "2", 3],
+    "value": "invalid",
+  }
+  """.data(using: .utf8)!)
+```
+After running this code, `foo` will be a `Foo` where `foo.array == [1, 3]` and `foo.value == nil`. Additionally, `foo.$array.results` will be `[.success(1), .failure(DecodingError.dataCorrupted(…), .success(3)]` and `foo.$value.error` will be `DecodingError.dataCorrupted(…)`.
 
 ## Decoding
 
@@ -22,7 +37,7 @@ Custom types can conform to the `ResilientRawRepresentable` protocol which allow
 
 #### `decodingFallback`
 A `ResilientRawRepresentable` type can optionally define a `decodingFallback`, which allows it to be resiliently decoded without being wrapped in an optional. For instance, the following enum can be used in a property written `@Resilient var myEnum: MyEnum`:
-```
+```swift
 enum MyEnum: String, ResilientRawRepresentable {
   case existing
   case unknown
