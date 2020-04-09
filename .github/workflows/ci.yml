@@ -1,9 +1,9 @@
-name: macOS
+name: Build
 
 on: [push, pull_request]
 
 jobs:
-  build:
+  build-macos:
     runs-on: macos-latest
     steps:
     # Checks-out the repo. More at: https://github.com/actions/checkout
@@ -16,3 +16,11 @@ jobs:
       run: swift test
     - name: Validate Podspec
       run: bundle install && bundle exec pod lib lint --verbose --fail-fast
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: Didstopia/SwiftAction@v1.0.2
+      with:
+        swift-action: 'test'

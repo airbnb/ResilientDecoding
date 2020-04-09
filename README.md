@@ -1,6 +1,6 @@
 # Resilient Decoding
 
-![](https://github.com/airbnb/ResilientDecoding/workflows/macOS/badge.svg) 
+![](https://github.com/airbnb/ResilientDecoding/workflows/Build/badge.svg) 
 [![Swift Package Manager compatible](https://img.shields.io/badge/SPM-compatible-4BC51D.svg?style=flat)](https://github.com/apple/swift-package-manager)
 [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
 [![Version](https://img.shields.io/cocoapods/v/ResilientDecoding.svg)](https://cocoapods.org/pods/ResilientDecoding)
