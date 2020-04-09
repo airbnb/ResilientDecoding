@@ -6,7 +6,7 @@ Pod::Spec.new do |s|
   s.homepage = 'https://github.com/airbnb/ResilientDecoding'
   s.authors  = 'George Leontiev'
   s.source   = { :git => 'https://github.com/airbnb/ResilientDecoding.git', :tag => s.version }
-  s.swift_version = '5.1'
+  s.swift_version = '5.2'
   s.source_files = 'Sources/ResilientDecoding/**/*.{swift}'
   s.ios.deployment_target = '12.0'
   s.tvos.deployment_target = '12.0'
