@@ -37,6 +37,15 @@ In your Package.swift:
   ]
 ```
 
+### CocoaPods
+
+In your `Podfile`:
+
+```
+platform :ios, '12.0'
+pod 'ResilientDecoding', '~> 0.9'
+```
+
 ## Decoding
 
 The main interface to this package is the `@Resilient` property wrapper. It can be applied to three kinds of properties: `Optional`,  `Array`, and custom types conforming to the `ResilientRawRepresentable` protocol that this package provides. 
