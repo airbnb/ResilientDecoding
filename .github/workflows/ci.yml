@@ -3,7 +3,7 @@ name: macOS
 on: [push, pull_request]
 
 jobs:
-  build:
+  build-macos:
     runs-on: macos-latest
     steps:
     # Checks-out the repo. More at: https://github.com/actions/checkout
@@ -14,3 +14,11 @@ jobs:
       run: swift build
     - name: Run tests
       run: swift test
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: Didstopia/SwiftAction@v1.0.3
+      with:
+        swift-action: 'test'
