@@ -23,4 +23,5 @@ jobs:
     - uses: actions/checkout@v2
     - uses: Didstopia/SwiftAction@v1.0.2
       with:
+        swift-action: 'test --generate-linuxmain'
         swift-action: 'test'
