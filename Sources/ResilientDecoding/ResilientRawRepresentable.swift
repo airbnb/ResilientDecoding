@@ -28,7 +28,7 @@ public protocol ResilientRawRepresentable: Decodable, RawRepresentable where Raw
   static var decodingFallback: DecodingFallback { get }
 
   /**
-   Override this property to return `true` to report errors when encountering a `RawValue` that doesn _not_ correspond to a value of this type. Failure to decode the `RawValue` will _always_ report an error.
+   Override this property to return `true` to report errors when encountering a `RawValue` that does _not_ correspond to a value of this type. Failure to decode the `RawValue` will _always_ report an error.
    Defaults to `false`.
    */
   static var isFrozen: Bool { get }
