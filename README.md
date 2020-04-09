@@ -1,5 +1,7 @@
 # Resilient Decoding
 
+![](https://github.com/airbnb/ResilientDecoding/workflows/macOS/badge.svg) 
+
 ## Introduction
 
 This package defines mechanisms to partially recover from errors when decoding `Decodable` types. It also aims to provide an ergonomic API for inspecting decoding errors during development and reporting them in production.
