@@ -19,6 +19,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - uses: Didstopia/SwiftAction@v1.0.3
+    - uses: Didstopia/SwiftAction@v1.0.2
       with:
         swift-action: 'test'
