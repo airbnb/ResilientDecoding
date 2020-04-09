@@ -1,6 +1,6 @@
 # Resilient Decoding
 
-![](https://github.com/airbnb/ResilientDecoding/workflows/macOS/badge.svg) 
+![](https://github.com/airbnb/ResilientDecoding/workflows/Build/badge.svg) 
 
 ## Introduction
 
