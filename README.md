@@ -19,6 +19,17 @@ let foo = try JSONDecoder().decode(Foo.self, from: """
 ```
 After running this code, `foo` will be a `Foo` where `foo.array == [1, 3]` and `foo.value == nil`. Additionally, `foo.$array.results` will be `[.success(1), .failure(DecodingError.dataCorrupted(…), .success(3)]` and `foo.$value.error` will be `DecodingError.dataCorrupted(…)`.
 
+## Setup
+
+### Swift Package Manager
+
+In your Package.swift:
+```swift
+  dependencies: [
+    .package(name: "ResilientDecoding", url: "https://github.com/airbnb/ResilientDecoding.git", from: "0.9.0"),
+  ]
+```
+
 ## Decoding
 
 The main interface to this package is the `@Resilient` property wrapper. It can be applied to three kinds of properties: `Optional`,  `Array`, and custom types conforming to the `ResilientRawRepresentable` protocol that this package provides. 
