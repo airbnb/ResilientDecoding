@@ -5,7 +5,7 @@
 [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
 [![Version](https://img.shields.io/cocoapods/v/ResilientDecoding.svg)](https://cocoapods.org/pods/ResilientDecoding)
 [![License](https://img.shields.io/cocoapods/l/ResilientDecoding.svg)](https://cocoapods.org/pods/ResilientDecoding)
-[![Platform](https://img.shields.io/cocoapods/p/ResilientDecoding.svg)](https://cocoapods.org/pods/ResilientDecoding)
+[![Platform](https://img.shields.io/badge/platform-watchos%20%7C%20ios%20%7C%20tvos%20%7C%20macos%20%7C%20linux-lightgrey.svg?style=flat)](https://cocoapods.org/pods/ResilientDecoding)
 
 ## Introduction
 
