@@ -37,20 +37,6 @@ extension Resilient.ProjectedValue where Value: ResilientRawRepresentable {
 
 // MARK: - Sequences
 
-extension Resilient.ProjectedValue where Value: _ResilientSequence {
-
-  /**
-   All errors encountered during decoding
-   */
-  public var errors: [Error] { _errors }
-
-  /**
-   Interleaves encountered errors with the provided set of elements, potentially returning a single error in the case that the top-level decoding has failed.
-   */
-  public var results: [Result<Value._Element, Error>] { _errors(interleavedWith: value._resilientElements) }
-
-}
-
 extension Resilient.ProjectedValue where Value: Sequence {
 
   /**
@@ -62,6 +48,27 @@ extension Resilient.ProjectedValue where Value: Sequence {
    Interleaves encountered errors with the provided set of elements, potentially returning a single error in the case that the top-level decoding has failed.
    */
   public var results: [Result<Value.Element, Error>] { _errors(interleavedWith: value) }
+
+}
+
+/**
+ This extension makes it so that Resilient values of type `[T]?` also get array-like `projectedValue` errors using the `@dynamicMemberLookup` annotation in `Resilient.swift`. This was added to avoid conforming `Optional` to a `public` protocol defined in this module.
+ */
+extension Resilient.ProjectedValue {
+
+  public struct _ArrayErrorProperties<T> where T: Sequence {
+    public let errors: [Error]
+    public let results: [Result<T.Element, Error>]
+  }
+
+  public subscript<T, U>(dynamicMember keyPath: KeyPath<_ArrayErrorProperties<T>, U>) -> U
+    where
+      Value == T?,
+      T: Sequence
+  {
+    let results = value.map { _errors(interleavedWith: $0) } ?? []
+    return _ArrayErrorProperties(errors: _errors, results: results)[keyPath: keyPath]
+  }
 
 }
 
@@ -112,24 +119,7 @@ extension Resilient.ProjectedValue {
 
 }
 
-// MARK: - Implementation Details
-
-/**
- I generally avoid underscoring things, but this is `DEBUG`-only and if we are polluting `Optional` below, I prefer having an underscore to indicate that this protocol and its property should not be used by consumers.
- A `Resilient` type representing a sequence, this protocol is used to surface sequence-specific error properties on `Resilient.ProjectedValue`.
- */
-public protocol _ResilientSequence {
-  associatedtype _Element
-  var _resilientElements: [_Element] { get }
-}
-
-/**
- I generally avoid extensions on standard types but this one is `DEBUG`-only.
- This is the only way I know to write essentially `extension Resilient<[T]?>.ProjectedValue` (as `extension Resilient.ProjectedValue where Value: ResilientSequence`).
- */
-extension Optional: _ResilientSequence where Wrapped: Sequence & ExpressibleByArrayLiteral {
-  public var _resilientElements: [Wrapped.Element] { Array(self ?? []) }
-}
+// MARK: - Annotated Errors
 
 /**
  An error encountered while decoding a `Resilient` array and the offset it was encountered at

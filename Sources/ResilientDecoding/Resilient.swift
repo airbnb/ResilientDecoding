@@ -39,6 +39,7 @@ public struct Resilient<Value: Decodable>: Decodable {
     projectedValue = ProjectedValue(value: value, topLevelError: topLevelError, errorsAtOffset: errorsAtOffset)
   }
 
+  @dynamicMemberLookup
   public struct ProjectedValue {
     let value: Value
 
