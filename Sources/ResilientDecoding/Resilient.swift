@@ -35,6 +35,7 @@ public struct Resilient<Value: Decodable>: Decodable {
     topLevelError: Error?,
     errorsAtOffset: [ErrorAtOffset])
   {
+    assert(topLevelError != nil || !errorsAtOffset.isEmpty)
     wrappedValue = value
     projectedValue = ProjectedValue(value: value, topLevelError: topLevelError, errorsAtOffset: errorsAtOffset)
   }
@@ -62,10 +63,14 @@ public struct Resilient<Value: Decodable>: Decodable {
   func map<T>(transform: (Value) -> T) -> Resilient<T> {
     let value = transform(wrappedValue)
     #if DEBUG
-    return Resilient<T>(
-      value: value,
-      topLevelError: projectedValue.topLevelError,
-      errorsAtOffset: projectedValue.errorsAtOffset)
+    if projectedValue.topLevelError == nil, projectedValue.errorsAtOffset.isEmpty {
+      return Resilient<T>(value)
+    } else {
+      return Resilient<T>(
+        value: value,
+        topLevelError: projectedValue.topLevelError,
+        errorsAtOffset: projectedValue.errorsAtOffset)
+    }
     #else
     return Resilient<T>(value)
     #endif
