@@ -11,7 +11,7 @@ jobs:
     - name: Select Xcode version
       run: sudo xcode-select -switch /Applications/Xcode_11.4.app
     - name: Build project (Release)
-      run: swift build -c Release
+      run: swift build -c release
     - name: Run tests
       run: swift test
     - name: Validate Podspec
