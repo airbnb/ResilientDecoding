@@ -24,32 +24,19 @@ public struct Resilient<Value: Decodable>: Decodable {
   public init(_ value: Value) {
     wrappedValue = value
     #if DEBUG
-    projectedValue = ProjectedValue(value: value, topLevelError: nil, errorsAtOffset: [])
+    projectedValue = PropertyLevelErrors(decodedValue: value, error: nil)
     #endif
   }
 
   #if DEBUG
 
-  fileprivate init(
-    value: Value,
-    topLevelError: Error?,
-    errorsAtOffset: [ErrorAtOffset])
+  fileprivate init(_ value: Value, error: Error)
   {
     wrappedValue = value
-    projectedValue = ProjectedValue(value: value, topLevelError: topLevelError, errorsAtOffset: errorsAtOffset)
+    projectedValue = PropertyLevelErrors(decodedValue: value, error: error)
   }
 
-  public struct ProjectedValue {
-    let value: Value
-
-    let topLevelError: Error?
-
-    /**
-     This array will only be non-empty when `Value` is an `Array`. It is meant to be accessed via the `results` or `errors` property.
-     */
-    let errorsAtOffset: [ErrorAtOffset]
-  }
-  public let projectedValue: ProjectedValue
+  public let projectedValue: PropertyLevelErrors
 
   #endif
 
@@ -62,10 +49,11 @@ public struct Resilient<Value: Decodable>: Decodable {
   func map<T>(transform: (Value) -> T) -> Resilient<T> {
     let value = transform(wrappedValue)
     #if DEBUG
-    return Resilient<T>(
-      value: value,
-      topLevelError: projectedValue.topLevelError,
-      errorsAtOffset: projectedValue.errorsAtOffset)
+    if let error = projectedValue.error {
+      return Resilient<T>(value, error: error)
+    } else {
+      return Resilient<T>(value)
+    }
     #else
     return Resilient<T>(value)
     #endif
@@ -81,35 +69,18 @@ extension Decoder {
    Since this is the only way to create a `Resilient` with an error, this ensures we are reporting all errors encountered in this manner.
    */
   func resilient<T>(_ fallbackValue: T, error: Error) -> Resilient<T> {
-    resilientDecodingHandled(error)
     #if DEBUG
-      return Resilient(
-        value: fallbackValue,
-        topLevelError: error,
-        errorsAtOffset: [])
+      if error is ArrayDecodingError {
+        /// Resilient arrays are reponsible for reporting element decoding errors themselves.
+      } else {
+        resilientDecodingHandled(error)
+      }
+      return Resilient(fallbackValue, error: error)
     #else
+      resilientDecodingHandled(error)
       return Resilient(fallbackValue)
     #endif
   }
-
-}
-
-extension Resilient where Value: Collection {
-
-  #if DEBUG
-  /**
-   Creates a `Resilient` value with a partial value, and the errors which caused some elements to be omitted.
-   - note: Unlike `Decoder.resilient(_:error)`, the caller is responsible for ensuring the errors in `errorsAtOffset` are reported using `Decoder.resilientDecodingErrorHandled`.
-   */
-  init(_ partialValue: Value, errorsAtOffset: [ErrorAtOffset]) {
-    precondition(!errorsAtOffset.isEmpty)
-    wrappedValue = partialValue
-    projectedValue = ProjectedValue(
-      value: partialValue,
-      topLevelError: nil,
-      errorsAtOffset: errorsAtOffset)
-  }
-  #endif
 
 }
 
@@ -183,7 +154,7 @@ extension KeyedDecodingContainer {
     } catch {
       #if DEBUG
         /// No other place in the code is allowed to use an `UnreportableError`
-        return Resilient(value: fallback(), topLevelError: UnreportableError(error), errorsAtOffset: [])
+        return Resilient(fallback(), error: UnreportableError(error))
       #else
         return Resilient(fallback())
       #endif

@@ -72,7 +72,7 @@ extension Decoder {
         elements.reserveCapacity(count)
       }
       #if DEBUG
-      var errorsAtOffset: [ErrorAtOffset] = []
+      var errorBuilder = ArrayDecodingError.Builder()
       #endif
       while !container.isAtEnd {
         /// It is very unlikely that an error will be thrown here, so it is fine that this would fail the entire array
@@ -82,13 +82,13 @@ extension Decoder {
            We use `Element(from: container.superDecoder())` instead of `container.decode(Element.self)` here because the latter would not advance to the next element in the case of an error.
            */
           elements.append(try Element(from: elementDecoder))
+          #if DEBUG
+          errorBuilder.decodedElement()
+          #endif
         } catch {
-          /**
-           While this is similar to the catch block below, it is called on the _element_ decoder instead of the _array_ decoder so this error is registered as happening to the element.
-           */
           elementDecoder.resilientDecodingHandled(error)
           #if DEBUG
-          errorsAtOffset.append(ErrorAtOffset(offset: elements.count, error: error))
+          errorBuilder.failedToDecodeElement(dueTo: error)
           #endif
         }
       }
@@ -96,16 +96,16 @@ extension Decoder {
        While we technically don't need this check, it makes debugging easier to only have code paths which encounter errors call the initializers that take error arguments. This enables developers to set breakpoints to catch partial failures without adding breakpoint conditions (which are slow).
        */
       #if DEBUG
-      if errorsAtOffset.isEmpty {
-        return Resilient(elements)
+      if let error = errorBuilder.build() {
+        return self.resilient(elements, error: error)
       } else {
-        return Resilient(elements, errorsAtOffset: errorsAtOffset)
+        return Resilient(elements)
       }
       #else
       return Resilient(elements)
       #endif
     } catch {
-      return resilient([], error: error)
+      return self.resilient([], error: error)
     }
   }
 
