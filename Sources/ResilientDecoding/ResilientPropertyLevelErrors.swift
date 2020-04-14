@@ -5,7 +5,7 @@ import Foundation
 
 /**
  The `Resilient` property wrapper has a `projectedValue` in `DEBUG` builds which contains the error(s) encountered when decoding that property. This is intended to only be used during development, error reporting in release should instead be done via `ResilientDecodingErrorReporter`.
- Limiting this functionality to `DEBUG` allows us to trade some extra complexity in this file for better _clarity at point of use_ (https://swift.org/documentation/api-design-guidelines/) and guarantee that this doesn't impact release builds.
+ Limiting this functionality to `DEBUG` allows us to trade some extra complexity in this file for better [_clarity at point of use_](https://swift.org/documentation/api-design-guidelines/) and guarantee that this doesn't impact release builds.
  */
 #if DEBUG
 
