@@ -72,7 +72,7 @@ extension Decoder {
         elements.reserveCapacity(count)
       }
       #if DEBUG
-      var errorBuilder = ArrayDecodingError.Builder()
+      var errorState: ArrayDecodingErrorState = .start
       #endif
       while !container.isAtEnd {
         /// It is very unlikely that an error will be thrown here, so it is fine that this would fail the entire array
@@ -83,12 +83,12 @@ extension Decoder {
            */
           elements.append(try Element(from: elementDecoder))
           #if DEBUG
-          errorBuilder.decodedElement()
+          errorState.decodedElement()
           #endif
         } catch {
           elementDecoder.resilientDecodingHandled(error)
           #if DEBUG
-          errorBuilder.failedToDecodeElement(dueTo: error)
+          errorState.failedToDecodeElement(dueTo: error)
           #endif
         }
       }
@@ -96,7 +96,7 @@ extension Decoder {
        While we technically don't need this check, it makes debugging easier to only have code paths which encounter errors call the initializers that take error arguments. This enables developers to set breakpoints to catch partial failures without adding breakpoint conditions (which are slow).
        */
       #if DEBUG
-      if let error = errorBuilder.build() {
+      if let error = errorState.error {
         return self.resilient(elements, error: error)
       } else {
         return Resilient(elements)

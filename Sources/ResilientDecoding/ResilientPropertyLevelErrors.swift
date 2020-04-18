@@ -62,7 +62,7 @@ extension Resilient {
      */
     public subscript<T, U>(dynamicMember keyPath: KeyPath<ArrayErrorDigest<T>, U>) -> U
       where
-        Value == [T]
+      Value == [T]
     {
       return ArrayErrorDigest(error: error, elements: decodedValue)[keyPath: keyPath]
     }
@@ -72,7 +72,7 @@ extension Resilient {
      */
     public subscript<T, U>(dynamicMember keyPath: KeyPath<ArrayErrorDigest<T>, U>) -> U
       where
-        Value == [T]?
+      Value == [T]?
     {
       return ArrayErrorDigest(error: error, elements: decodedValue ?? [])[keyPath: keyPath]
     }
@@ -86,39 +86,6 @@ extension Resilient {
  An error which represents any number of errors encountered when decoding a `Resilient` array.
  */
 struct ArrayDecodingError: Error {
-
-  /**
-   Builds an `ArrayDecodingError`. This type assumes you are decoding elements in order, and care must be taken that the `mutating` members are called in the correct order.
-   */
-  struct Builder {
-    private var index = 0
-    private var arrayDecodingError = ArrayDecodingError()
-
-    /**
-     Signifies that an element was omitted due to a decoding error
-     */
-    mutating func failedToDecodeElement(dueTo error: Error) {
-      arrayDecodingError.sortedErrorsAtOffset.append((index, error))
-    }
-
-    /**
-     Signifies that an element was decoded successfully
-     */
-    mutating func decodedElement() {
-      index += 1
-    }
-
-    /**
-     Attempts to build the `ArrayDecodingError`, returns `nil` if all elements decoded successfully.
-     */
-    func build() -> ArrayDecodingError? {
-      if arrayDecodingError.sortedErrorsAtOffset.isEmpty {
-        return nil
-      } else {
-        return arrayDecodingError
-      }
-    }
-  }
 
   /**
    This error must be constructed using `Builder`
@@ -147,11 +114,72 @@ struct ArrayDecodingError: Error {
         } else {
           return first.offset < second.offset
         }
-      }
-      .map { $0.element.element }
+    }
+    .map { $0.element.element }
   }
 
-  private var sortedErrorsAtOffset: [(offset: Int, error: Error)] = []
+  fileprivate var sortedErrorsAtOffset: [(offset: Int, error: Error)] = []
+}
+
+/**
+ Builds an `ArrayDecodingError`. This type assumes you are decoding elements in order, and care must be taken that the `mutating` members are called in the correct order.
+ */
+enum ArrayDecodingErrorState {
+  case start
+  case none(count: Int)
+  case arraydecodingError(ArrayDecodingError, count: Int)
+
+  /**
+   Signifies that an element was omitted due to a decoding error
+   */
+  mutating func failedToDecodeElement(dueTo error: Error) {
+    var decodingError: ArrayDecodingError
+    switch self {
+    case .start, .none:
+      decodingError = ArrayDecodingError()
+    case .arraydecodingError(let error, _):
+      decodingError = error
+    }
+    decodingError.sortedErrorsAtOffset.append((index, error))
+    self = .arraydecodingError(decodingError, count: index)
+  }
+
+  /**
+   Signifies that an element was decoded successfully
+   */
+  mutating func decodedElement() {
+    switch self {
+    case .start:
+      self = .none(count: 1)
+    case .none(let count):
+      self = .none(count: count + 1)
+    case .arraydecodingError(let error, let count):
+      self = .arraydecodingError(error, count: count + 1)
+    }
+  }
+
+  /**
+   Attempts to build the `ArrayDecodingError`, returns `nil` if all elements decoded successfully.
+   */
+  var error: ArrayDecodingError? {
+    switch self {
+    case .start, .none:
+      return nil
+    case .arraydecodingError(let error, _):
+      return error
+    }
+  }
+
+  private var index: Int {
+    switch self {
+    case .start:
+      return 0
+    case .none(let totalElements):
+      return totalElements
+    case .arraydecodingError(_, let totalElements):
+      return totalElements
+    }
+  }
 }
 
 #endif
