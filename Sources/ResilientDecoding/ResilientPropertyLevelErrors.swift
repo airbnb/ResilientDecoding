@@ -9,22 +9,6 @@ import Foundation
  */
 
 #if DEBUG
-extension Resilient {
-  public struct Projected {
-    let value: Value
-
-    enum
-  }
-}
-#else
-extension Resilient {
-  public struct DecodingOutcome {
-    let value: Value
-  }
-}
-#endif
-
-#if DEBUG
 
 extension Resilient {
 
