@@ -51,12 +51,9 @@ public struct Resilient<Value: Decodable>: Decodable {
     #if DEBUG
     if let error = projectedValue.error {
       return Resilient<T>(value, error: error)
-    } else {
-      return Resilient<T>(value)
-    }
-    #else
-    return Resilient<T>(value)
+    } 
     #endif
+    return Resilient<T>(value)
   }
 }
 

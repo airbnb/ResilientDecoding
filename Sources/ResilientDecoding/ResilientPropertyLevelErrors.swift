@@ -7,6 +7,23 @@ import Foundation
  The `Resilient` property wrapper has a `projectedValue` in `DEBUG` builds which contains the error(s) encountered when decoding that property. This is intended to only be used during development, error reporting in release should instead be done via `ResilientDecodingErrorReporter`.
  Limiting this functionality to `DEBUG` allows us to trade some extra complexity in this file for better [_clarity at point of use_](https://swift.org/documentation/api-design-guidelines/) and guarantee that this doesn't impact release builds.
  */
+
+#if DEBUG
+extension Resilient {
+  public struct Projected {
+    let value: Value
+
+    enum
+  }
+}
+#else
+extension Resilient {
+  public struct DecodingOutcome {
+    let value: Value
+  }
+}
+#endif
+
 #if DEBUG
 
 extension Resilient {
@@ -33,7 +50,7 @@ extension Resilient {
       public let results: [Result<Element, Error>]
 
       /**
-       All errors encountered when decoding the resilient array.
+       All errors encountered when decoding the resilient array, in no particular order.
        */
       public var errors: [Error] {
         return results.compactMap { result in
