@@ -26,10 +26,12 @@ final class ResilientRawRepresentableArrayTests: XCTestCase {
     XCTAssertEqual(mock.optionalResilientArray, [.existing, .existing])
     XCTAssertEqual(mock.resilientArrayOfFrozenType, [.existing, .existing])
     XCTAssertEqual(mock.optionalResilientArrayOfFrozenType, [.existing, .existing])
+    #if DEBUG
     XCTAssertEqual(mock.$resilientArray.errors.count, 0)
     XCTAssertEqual(mock.$optionalResilientArray.errors.count, 0)
     XCTAssertEqual(mock.$resilientArrayOfFrozenType.errors.count, 0)
     XCTAssertEqual(mock.$optionalResilientArrayOfFrozenType.errors.count, 0)
+    #endif
   }
 
   func testDecodesWhenMissingKeysWithoutErrors() throws {
@@ -41,8 +43,10 @@ final class ResilientRawRepresentableArrayTests: XCTestCase {
       """)
     XCTAssertEqual(mock.optionalResilientArray, nil)
     XCTAssertEqual(mock.optionalResilientArrayOfFrozenType, nil)
+    #if DEBUG
     XCTAssertEqual(mock.$optionalResilientArray.errors.count, 0)
     XCTAssertEqual(mock.$optionalResilientArrayOfFrozenType.errors.count, 0)
+    #endif
   }
 
   func testDecodesNullValuesWithoutErrors() throws {
@@ -56,8 +60,10 @@ final class ResilientRawRepresentableArrayTests: XCTestCase {
       """)
     XCTAssertEqual(mock.optionalResilientArray, nil)
     XCTAssertEqual(mock.optionalResilientArrayOfFrozenType, nil)
+    #if DEBUG
     XCTAssertEqual(mock.$optionalResilientArray.errors.count, 0)
     XCTAssertEqual(mock.$optionalResilientArrayOfFrozenType.errors.count, 0)
+    #endif
   }
 
   func testResilientlyDecodesNovelCases() throws {
@@ -75,11 +81,13 @@ final class ResilientRawRepresentableArrayTests: XCTestCase {
     XCTAssertEqual(mock.resilientArrayOfFrozenType, [.existing, .existing])
     XCTAssertEqual(mock.optionalResilientArrayOfFrozenType, [.existing])
 
+    #if DEBUG
     /// All properties provide errors for inspection, but only _frozen_ types report the error (hence "3" expected errors above)
     XCTAssertEqual(mock.$resilientArray.errors.count, 1)
     XCTAssertEqual(mock.$optionalResilientArray.errors.count, 2)
     XCTAssertEqual(mock.$resilientArrayOfFrozenType.errors.count, 1)
     XCTAssertEqual(mock.$optionalResilientArrayOfFrozenType.errors.count, 2)
+    #endif
   }
 
   func testResilientlyDecodesInvalidCases() throws {
@@ -97,11 +105,13 @@ final class ResilientRawRepresentableArrayTests: XCTestCase {
     XCTAssertEqual(mock.resilientArrayOfFrozenType, [.existing, .existing])
     XCTAssertEqual(mock.optionalResilientArrayOfFrozenType, [.existing])
 
+    #if DEBUG
     /// All properties provide errors for inspection, but only _frozen_ types report the error (hence "3" expected errors above)
     XCTAssertEqual(mock.$resilientArray.errors.count, 1)
     XCTAssertEqual(mock.$optionalResilientArray.errors.count, 2)
     XCTAssertEqual(mock.$resilientArrayOfFrozenType.errors.count, 1)
     XCTAssertEqual(mock.$optionalResilientArrayOfFrozenType.errors.count, 2)
+    #endif
   }
 
 }

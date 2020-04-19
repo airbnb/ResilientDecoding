@@ -20,6 +20,7 @@ final class ResilientDecodingErrorReporterTests: XCTestCase {
         "resilientEnum": "novel",
       }
       """.data(using: .utf8)!)
+    #if DEBUG
     XCTAssertEqual(errorReporter.debugDescription, """
       resilientArray
         Index 1
@@ -29,6 +30,7 @@ final class ResilientDecodingErrorReporterTests: XCTestCase {
       resilientEnum
         - Unknown novel value "novel" (this error is not reported by default)
       """)
+    #endif
   }
 
 }

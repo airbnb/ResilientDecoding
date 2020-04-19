@@ -43,6 +43,7 @@ extension XCTestCase {
 
 }
 
+#if DEBUG
 /**
  Since `Error` is not `Equatable`, we use this `enum` to verify the correct outcome was encountered
  */
@@ -55,7 +56,6 @@ enum ExpectedDecodingOutcome {
 
 extension ResilientDecodingOutcome {
   func `is`(_ expected: ExpectedDecodingOutcome) -> Bool {
-    #if DEBUG
     switch (self, expected) {
     case
       (.decodedSuccessfully, .decodedSuccessfully),
@@ -67,9 +67,6 @@ extension ResilientDecodingOutcome {
     default:
       return false
     }
-    #else
-    /// We can't compare `DecodingOutcome`s in `RELEASE`
-    return true
-    #endif
   }
 }
+#endif
