@@ -3,7 +3,7 @@
 
 import Foundation
 
-// MARK: - Public
+// MARK: - Resilient
 
 @propertyWrapper
 public struct Resilient<Value: Decodable>: Decodable {
@@ -15,163 +15,105 @@ public struct Resilient<Value: Decodable>: Decodable {
   public init(from decoder: Decoder) throws {
     assertionFailure()
     let value = try Value(from: decoder)
-    self = Self(value)
+    self = Self(value, outcome: .decodedSuccessfully)
   }
 
   /**
    Initialized a `Resilient` value as though it had been decoded without encountering any errors.
    */
   public init(_ value: Value) {
-    wrappedValue = value
-    #if DEBUG
-    projectedValue = PropertyLevelErrors(decodedValue: value, error: nil)
-    #endif
+    self.wrappedValue = value
+    self.outcome = .decodedSuccessfully
   }
-
-  #if DEBUG
-
-  fileprivate init(_ value: Value, error: Error)
-  {
-    wrappedValue = value
-    projectedValue = PropertyLevelErrors(decodedValue: value, error: error)
+    
+  init(_ value: Value, outcome: ResilientDecodingOutcome) {
+    self.wrappedValue = value
+    self.outcome = outcome
   }
-
-  public let projectedValue: PropertyLevelErrors
-
-  #endif
 
   public let wrappedValue: Value
 
+  let outcome: ResilientDecodingOutcome
+
   /**
    Transforms the value of a `Resilient` type.
-   If `wrappedValue` is an array,  care should be taken to ensure that the `value.count` == `transform(value).count` in order to not break the `results` property.
+   If `self` is a resilient array,  care should be taken to ensure that the `value.count` == `transform(value).count` in order to not break the `results` property.
    */
   func map<T>(transform: (Value) -> T) -> Resilient<T> {
-    let value = transform(wrappedValue)
-    #if DEBUG
-    if let error = projectedValue.error {
-      return Resilient<T>(value, error: error)
-    } 
-    #endif
-    return Resilient<T>(value)
+    Resilient<T>(transform(wrappedValue), outcome: outcome)
   }
-}
-
-// MARK: - Creating Resilient Values
-
-extension Decoder {
-
-  /**
-   Creates a `Resilient` value with a fallback value after an error has occurred and reports the error to `ResilientDecodingErrorReporter`.
-   Since this is the only way to create a `Resilient` with an error, this ensures we are reporting all errors encountered in this manner.
-   */
-  func resilient<T>(_ fallbackValue: T, error: Error) -> Resilient<T> {
-    #if DEBUG
-      if error is ArrayDecodingError {
-        /// Resilient arrays are reponsible for reporting element decoding errors themselves.
-      } else {
-        resilientDecodingHandled(error)
+  
+  #if DEBUG
+  @dynamicMemberLookup
+  public struct ProjectedValue {
+    public let outcome: ResilientDecodingOutcome
+    
+    public var error: Error? {
+      switch outcome {
+      case .decodedSuccessfully, .keyNotFound, .valueWasNil:
+        return nil
+      case .recoveredFrom(let error, _):
+        return error
       }
-      return Resilient(fallbackValue, error: error)
-    #else
-      resilientDecodingHandled(error)
-      return Resilient(fallbackValue)
-    #endif
+    }
   }
-
+  public var projectedValue: ProjectedValue { ProjectedValue(outcome: outcome) }
+  #endif
+  
 }
 
-// MARK: - Decoding
+// MARK: - Decoding Outcome
 
-struct ResilientDecodingOptions: OptionSet {
-  let rawValue: Int
-  static let suppressKeyNotFoundError = ResilientDecodingOptions(rawValue: 1 << 0)
-  static let suppressValueNotFoundError = ResilientDecodingOptions(rawValue: 1 << 1)
-  static let behaveLikeOptional: ResilientDecodingOptions = [.suppressKeyNotFoundError, .suppressValueNotFoundError]
+#if DEBUG
+public enum ResilientDecodingOutcome {
+  case decodedSuccessfully
+  case keyNotFound
+  case valueWasNil
+  
+  /// https://github.com/apple/swift/blob/88b093e9d77d6201935a2c2fb13f27d961836777/stdlib/public/Darwin/Foundation/JSONEncoder.swift#L1657-L1661
+  case recoveredFrom(Error, wasReported: Bool)
 }
+#else
+struct ResilientDecodingOutcome {
+  static let decodedSuccessfully = Self()
+  static let keyNotFound = Self()
+  static let valueWasNil = Self()
+  static let recoveredFromDebugOnlyError = Self()
+  static func recoveredFrom(_: Error, wasReported: Bool) -> Self { Self() }
+}
+#endif
+
+// MARK: - Convenience
 
 extension KeyedDecodingContainer {
 
   /**
    Resiliently decodes a value for the specified key, using `fallback` if an error is encountered.
-   */
-  func resilientlyDecode<T: Decodable>(
-    _ type: T.Type,
-    forKey key: Key,
-    fallback: @autoclosure () -> T,
-    options: ResilientDecodingOptions) -> Resilient<T>
-  {
-    resilientlyDecode(
-      valueForKey: key,
-      fallback: fallback(),
-      options: options,
-      decode: { Resilient(try T(from: $0)) })
-  }
-
-  /**
-   Resiliently decodes a value for the specified key, using `fallback` if an error is encountered.
-   */
-  func resilientlyDecode<T: Decodable>(
-    _ type: T?.Type,
-    forKey key: Key) -> Resilient<T?>
-  {
-    resilientlyDecode(
-      T?.self,
-      forKey: key,
-      fallback: nil,
-      options: .behaveLikeOptional)
-  }
-
-  /**
-   Resiliently decodes a value for the specified key, using `fallback` if an error is encountered.
    This form allows the caller to provide their own `Resilient` with custom errors, which is only used for `ResilientArray` and `ResilientRawRepresentable` optionals that define a `decodingFallback`.
    */
-  func resilientlyDecode<T>(
+  func resilientlyDecode<T: Decodable>(
     valueForKey key: Key,
     fallback: @autoclosure () -> T,
-    options: ResilientDecodingOptions,
-    decode: (Decoder) throws -> Resilient<T>) -> Resilient<T>
+    behaveLikeOptional: Bool = true,
+    body: (Decoder) throws -> Resilient<T> = { Resilient(try T(from: $0)) }) -> Resilient<T>
   {
-    if options.contains(.suppressKeyNotFoundError), !contains(key) {
-      return Resilient(fallback())
+    if behaveLikeOptional, !contains(key) {
+      return Resilient(fallback(), outcome: .keyNotFound)
     }
     do {
       let decoder = try superDecoder(forKey: key)
       do {
-        if
-          options.contains(.suppressValueNotFoundError),
-          try decoder.singleValueContainer().decodeNil()
-        {
-          return Resilient(fallback())
+        if behaveLikeOptional, try decoder.singleValueContainer().decodeNil() {
+          return Resilient(fallback(), outcome: .valueWasNil)
         }
-        return try decode(decoder)
+        return try body(decoder)
       } catch {
-        return decoder.resilient(fallback(), error: error)
+        decoder.resilientDecodingHandled(error)
+        return Resilient(fallback(), outcome: .recoveredFrom(error, wasReported: true))
       }
     } catch {
-      #if DEBUG
-        /// No other place in the code is allowed to use an `UnreportableError`
-        return Resilient(fallback(), error: UnreportableError(error))
-      #else
-        return Resilient(fallback())
-      #endif
+      return Resilient(fallback(), outcome: .recoveredFrom(error, wasReported: false))
     }
   }
 
 }
-
-#if DEBUG
-
-/**
- This signifies that we encountered an error we cannot report.
- This is highly unlikely since we verify that the specified key exists before calling `superDecoder(forKey:)`, though we cannot guarantee this since we might be provided a custom `Decoder` implementation.
- */
-private struct UnreportableError: Error {
-  init(_ error: Error) {
-    assertionFailure()
-    self.error = error
-  }
-  let error: Error
-}
-
-#endif

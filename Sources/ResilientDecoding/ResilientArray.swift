@@ -26,86 +26,45 @@ extension KeyedDecodingContainer {
     where
       Element: Decodable
   {
-    resilientlyDecodeArray(of: Element.self, forKey: key)
+    resilientlyDecode(valueForKey: key, fallback: []) { $0.resilientlyDecodeArray() }
   }
 
   /**
    Decodes an optional `Resilient` array. A missing key or `nil` value will silently set the property to `nil`.
    */
   public func decode<Element: Decodable>(_ type: Resilient<[Element]?>.Type, forKey key: Key) throws -> Resilient<[Element]?> {
-    resilientlyDecodeArray(of: Element.self, forKey: key)
-  }
-
-  /**
-   Internal version of `decode(_:forKey:)`.
-   You can achieve the same effect by calling `decode(_:forKey:)` with the propery type argument, but this is more explicit.
-   */
-  func resilientlyDecodeArray<Element: Decodable>(of elementType: Element.Type, forKey key: Key) -> Resilient<[Element]> {
-    resilientlyDecode(
-      valueForKey: key,
-      fallback: [],
-      options: .behaveLikeOptional,
-      decode: { $0.resilientlyDecodeArray() })
-  }
-
-  /**
-   Internal version of `decode(_:forKey:)`.
-   You can achieve the same effect by calling `decode(_:forKey:)` with the propery type argument, but this is more explicit.
-   */
-  func resilientlyDecodeArray<Element: Decodable>(of elementType: Element.Type, forKey key: Key) -> Resilient<[Element]?> {
-    resilientlyDecode(
-      valueForKey: key,
-      fallback: nil,
-      options: .behaveLikeOptional,
-      decode: { $0.resilientlyDecodeArray().map { $0 } })
+    resilientlyDecode(valueForKey: key, fallback: nil) { $0.resilientlyDecodeArray().map { $0 } }
   }
 
 }
 
 extension Decoder {
-
+  
   func resilientlyDecodeArray<Element: Decodable>() -> Resilient<[Element]> {
+    resilientlyDecodeArray(decodeElement: Element.init)
+  }
+  
+  func resilientlyDecodeArray<Element>(decodeElement: (Decoder) throws -> Element) -> Resilient<[Element]> {
     do {
       var container = try unkeyedContainer()
-      var elements: [Element] = []
+      var results: [Result<Element, Error>] = []
       if let count = container.count {
-        elements.reserveCapacity(count)
+        results.reserveCapacity(count)
       }
-      #if DEBUG
-      var errorBuilder = ArrayDecodingError.Builder()
-      #endif
       while !container.isAtEnd {
         /// It is very unlikely that an error will be thrown here, so it is fine that this would fail the entire array
         let elementDecoder = try container.superDecoder()
         do {
-          /**
-           We use `Element(from: container.superDecoder())` instead of `container.decode(Element.self)` here because the latter would not advance to the next element in the case of an error.
-           */
-          elements.append(try Element(from: elementDecoder))
-          #if DEBUG
-          errorBuilder.decodedElement()
-          #endif
+          results.append(.success(try decodeElement(elementDecoder)))
         } catch {
           elementDecoder.resilientDecodingHandled(error)
-          #if DEBUG
-          errorBuilder.failedToDecodeElement(dueTo: error)
-          #endif
+          results.append(.failure(error))
         }
       }
-      /**
-       While we technically don't need this check, it makes debugging easier to only have code paths which encounter errors call the initializers that take error arguments. This enables developers to set breakpoints to catch partial failures without adding breakpoint conditions (which are slow).
-       */
-      #if DEBUG
-      if let error = errorBuilder.build() {
-        return self.resilient(elements, error: error)
-      } else {
-        return Resilient(elements)
-      }
-      #else
-      return Resilient(elements)
-      #endif
+      return Resilient(results)
     } catch {
-      return self.resilient([], error: error)
+      resilientDecodingHandled(error)
+      return Resilient([], outcome: .recoveredFrom(error, wasReported: true))
     }
   }
 
