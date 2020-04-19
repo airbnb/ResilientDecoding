@@ -20,6 +20,8 @@ final class ResilientArrayTests: XCTestCase {
       """)
     XCTAssertEqual(mock.resilientArray, [1, 2, 3])
     XCTAssertEqual(mock.optionalResilientArray, [4, 5, 6])
+    XCTAssert(mock.$resilientArray.outcome.is(.decodedSuccessfully))
+    XCTAssert(mock.$optionalResilientArray.outcome.is(.decodedSuccessfully))
     XCTAssert(mock.$resilientArray.errors.isEmpty)
     XCTAssert(mock.$optionalResilientArray.errors.isEmpty)
   }
@@ -31,6 +33,8 @@ final class ResilientArrayTests: XCTestCase {
       """)
     XCTAssertEqual(mock.resilientArray, [])
     XCTAssertNil(mock.optionalResilientArray)
+    XCTAssert(mock.$resilientArray.outcome.is(.keyNotFound))
+    XCTAssert(mock.$optionalResilientArray.outcome.is(.keyNotFound))
     XCTAssertEqual(mock.$resilientArray.errors.count, 0)
     XCTAssertEqual(mock.$optionalResilientArray.errors.count, 0)
   }
@@ -44,6 +48,8 @@ final class ResilientArrayTests: XCTestCase {
       """)
     XCTAssertEqual(mock.resilientArray, [])
     XCTAssertNil(mock.optionalResilientArray)
+    XCTAssert(mock.$resilientArray.outcome.is(.valueWasNil))
+    XCTAssert(mock.$optionalResilientArray.outcome.is(.valueWasNil))
     XCTAssertEqual(mock.$resilientArray.errors.count, 0)
     XCTAssertEqual(mock.$optionalResilientArray.errors.count, 0)
   }
@@ -57,9 +63,11 @@ final class ResilientArrayTests: XCTestCase {
       """,
       expectedErrorCount: 2)
     XCTAssertEqual(mock.resilientArray, [])
+    XCTAssert(mock.$resilientArray.outcome.is(.recoveredFromError(wasReported: true)))
     XCTAssertEqual(mock.$resilientArray.errors.count, 1)
     XCTAssertEqual(mock.$resilientArray.results.map { try? $0.get() }, [nil])
     XCTAssertEqual(mock.optionalResilientArray, [])
+    XCTAssert(mock.$optionalResilientArray.outcome.is(.recoveredFromError(wasReported: true)))
     XCTAssertEqual(mock.$optionalResilientArray.errors.count, 1)
     XCTAssertEqual(mock.$optionalResilientArray.results.map { try? $0.get() }, [nil])
   }
@@ -73,9 +81,11 @@ final class ResilientArrayTests: XCTestCase {
       """,
       expectedErrorCount: 5)
     XCTAssertEqual(mock.resilientArray, [1, 3, 5])
+    XCTAssert(mock.$resilientArray.outcome.is(.recoveredFromError(wasReported: false)))
     XCTAssertEqual(mock.$resilientArray.errors.count, 2)
     XCTAssertEqual(mock.$resilientArray.results.map { try? $0.get() }, [1, nil, 3, nil, 5])
     XCTAssertEqual(mock.optionalResilientArray, [2, 5])
+    XCTAssert(mock.$optionalResilientArray.outcome.is(.recoveredFromError(wasReported: false)))
     XCTAssertEqual(mock.$optionalResilientArray.errors.count, 3)
     XCTAssertEqual(mock.$optionalResilientArray.results.map { try? $0.get() }, [nil, 2, nil, nil, 5])
   }

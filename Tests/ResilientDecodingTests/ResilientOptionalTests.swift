@@ -17,6 +17,7 @@ final class ResilientOptionalTests: XCTestCase {
       }
       """)
     XCTAssertEqual(mock.resilientOptional, 1)
+    XCTAssert(mock.$resilientOptional.outcome.is(.decodedSuccessfully))
     XCTAssertNil(mock.$resilientOptional.error)
   }
 
@@ -26,6 +27,7 @@ final class ResilientOptionalTests: XCTestCase {
       }
       """)
     XCTAssertNil(mock.resilientOptional)
+    XCTAssert(mock.$resilientOptional.outcome.is(.keyNotFound))
     XCTAssertNil(mock.$resilientOptional.error)
   }
 
@@ -36,6 +38,7 @@ final class ResilientOptionalTests: XCTestCase {
       }
       """)
     XCTAssertNil(mock.resilientOptional)
+    XCTAssert(mock.$resilientOptional.outcome.is(.valueWasNil))
     XCTAssertNil(mock.$resilientOptional.error)
   }
 
@@ -47,6 +50,7 @@ final class ResilientOptionalTests: XCTestCase {
       """,
       expectedErrorCount: 1)
     XCTAssertNil(mock.resilientOptional)
+    XCTAssert(mock.$resilientOptional.outcome.is(.recoveredFromError(wasReported: true)))
     XCTAssertNotNil(mock.$resilientOptional.error)
   }
 
