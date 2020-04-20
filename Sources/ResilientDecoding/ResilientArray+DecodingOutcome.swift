@@ -56,12 +56,16 @@ extension ResilientDecodingOutcome {
     }
   }
   
+  /**
+   Creates an `ArrayDecodingError` representation of this outcome.
+   */
   fileprivate func arrayDecodingError<T>(_ elementType: T.Type = T.self) -> ResilientDecodingOutcome.ArrayDecodingError<T> {
     typealias ArrayDecodingError = ResilientDecodingOutcome.ArrayDecodingError<T>
     switch self {
     case .decodedSuccessfully, .keyNotFound, .valueWasNil:
       return .init(results: [])
     case let .recoveredFrom(error as ArrayDecodingError, wasReported):
+      /// `ArrayDecodingError` should not be reported
       assert(!wasReported)
       return error
     case .recoveredFrom(let error, _):

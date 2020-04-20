@@ -65,15 +65,35 @@ public struct Resilient<Value: Decodable>: Decodable {
 // MARK: - Decoding Outcome
 
 #if DEBUG
+/**
+ The outcome of decoding a `Resilient` type
+ */
 public enum ResilientDecodingOutcome {
+  /**
+   A value was decoded successfully
+   */
   case decodedSuccessfully
+  
+  /**
+   The key was missing, and it was not treated as an error (for instance when decoding an `Optional`)
+   */
   case keyNotFound
+  
+  /**
+   The value was `nil`, and it was not treated as an error (for instance when decoding an `Optional`)
+   */
   case valueWasNil
   
-  /// https://github.com/apple/swift/blob/88b093e9d77d6201935a2c2fb13f27d961836777/stdlib/public/Darwin/Foundation/JSONEncoder.swift#L1657-L1661
+  /**
+   An error was recovered from during decoding
+   - parameter `wasReported`: Some errors are not reported, for instance `ArrayDecodingError`
+   */
   case recoveredFrom(Error, wasReported: Bool)
 }
 #else
+/**
+ In release, we don't want the decoding outcome mechanism taking up space, so we define an empty struct with `static` properties and functions which match the `enum` above. This reduces the number of places we need to use `#if DEBUG` substantially.
+ */
 struct ResilientDecodingOutcome {
   static let decodedSuccessfully = Self()
   static let keyNotFound = Self()
@@ -112,6 +132,9 @@ extension KeyedDecodingContainer {
         return Resilient(fallback(), outcome: .recoveredFrom(error, wasReported: true))
       }
     } catch {
+      /**
+       There is no `Decoder` to report an error to here, but this case should almost never happen, as `superDecoder` is meant to wrap any and throw it only at the moment something tries to decode a value from it. For isntance, `JSONDecoder` does not throw errors from this method: https://github.com/apple/swift/blob/88b093e9d77d6201935a2c2fb13f27d961836777/stdlib/public/Darwin/Foundation/JSONEncoder.swift#L1657-L1661
+       */
       return Resilient(fallback(), outcome: .recoveredFrom(error, wasReported: false))
     }
   }
