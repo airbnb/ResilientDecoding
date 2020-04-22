@@ -18,7 +18,7 @@ extension ResilientArrayTests {
         ("testDecodesNullValue", testDecodesNullValue),
         ("testDecodesValidInputWithoutErrors", testDecodesValidInputWithoutErrors),
         ("testDecodesWhenMissingKeys", testDecodesWhenMissingKeys),
-        ("testResilientlyDecodesArratWithInvalidElements", testResilientlyDecodesArratWithInvalidElements),
+        ("testResilientlyDecodesArrayWithInvalidElements", testResilientlyDecodesArrayWithInvalidElements),
         ("testResilientlyDecodesIncorrectType", testResilientlyDecodesIncorrectType),
     ]
 }
