@@ -81,8 +81,9 @@ enum MyEnum: String, ResilientRawRepresentable {
 
 ### Property-Level Errors
 
-In `DEBUG` builds, `Resilient` properties provide a `projectedValue` with information about errors encountered during decoding. Scalar types, such as `Optional` and `ResilientRawRepresentable`, provide a single `error` property. Developers can determine if an error ocurred during decoding by accessing `$foo.error` for a property written `@Resilient var foo: Int?`.
-`@Resilient` `Array` properties provide two error fields: `errors` and `results`. `errors` is the list of all errors that were recovered from when decoding the array. `results` interleaves these errors with elements of the array that were successfully decoded. For instance, the `results` for a property written `@Resilient var baz: [Int]` when decoding the JSON snippet `[1, 2, "3"]` would be two `.success` values followed by a `.failure`.
+In `DEBUG` builds, `Resilient` properties provide a `projectedValue` with information about errors encountered during decoding. This information can be inspected using the `$property.outcome` property, which is an enum with cases including `keyNotFound` and `valueWasNil`. This is different from errors since the aformentioned two cases are actually not errors when the property value is `Optional`, for instance.
+Scalar types, such as `Optional` and `ResilientRawRepresentable`, also provide an `error` property. Developers can determine if an error ocurred during decoding by accessing `$foo.error` for a property written `@Resilient var foo: Int?`.
+`@Resilient` array properties provide two additional fields: `errors` and `results`. `errors` is the list of all errors that were recovered from when decoding the array. `results` interleaves these errors with elements of the array that were successfully decoded. For instance, the `results` for a property written `@Resilient var baz: [Int]` when decoding the JSON snippet `[1, 2, "3"]` would be two `.success` values followed by a `.failure`.
 
 ### `ResilientDecodingErrorReporter`
 

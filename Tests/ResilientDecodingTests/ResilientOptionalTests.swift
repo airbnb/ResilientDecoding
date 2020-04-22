@@ -17,7 +17,10 @@ final class ResilientOptionalTests: XCTestCase {
       }
       """)
     XCTAssertEqual(mock.resilientOptional, 1)
+    #if DEBUG
+    XCTAssert(mock.$resilientOptional.outcome.is(.decodedSuccessfully))
     XCTAssertNil(mock.$resilientOptional.error)
+    #endif
   }
 
   func testDecodesWhenMissingKeyWithoutErrors() throws {
@@ -26,7 +29,10 @@ final class ResilientOptionalTests: XCTestCase {
       }
       """)
     XCTAssertNil(mock.resilientOptional)
+    #if DEBUG
+    XCTAssert(mock.$resilientOptional.outcome.is(.keyNotFound))
     XCTAssertNil(mock.$resilientOptional.error)
+    #endif
   }
 
   func testDecodesNullValueWithoutErrors() throws {
@@ -36,7 +42,10 @@ final class ResilientOptionalTests: XCTestCase {
       }
       """)
     XCTAssertNil(mock.resilientOptional)
+    #if DEBUG
+    XCTAssert(mock.$resilientOptional.outcome.is(.valueWasNil))
     XCTAssertNil(mock.$resilientOptional.error)
+    #endif
   }
 
   func testResilientlyDecodesInvalidValue() throws {
@@ -47,7 +56,10 @@ final class ResilientOptionalTests: XCTestCase {
       """,
       expectedErrorCount: 1)
     XCTAssertNil(mock.resilientOptional)
+    #if DEBUG
+    XCTAssert(mock.$resilientOptional.outcome.is(.recoveredFromError(wasReported: true)))
     XCTAssertNotNil(mock.$resilientOptional.error)
+    #endif
   }
 
 }

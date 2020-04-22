@@ -24,7 +24,7 @@ extension KeyedDecodingContainer {
    The synthesized `init(from:)` of a struct with a propery declared like this: `@Resilient var title: String?` will call this method to decode that property.
    */
   public func decode<T: Decodable>(_ type: Resilient<T?>.Type, forKey key: Key) throws -> Resilient<T?> {
-    resilientlyDecode(T?.self, forKey: key)
+    resilientlyDecode(valueForKey: key, fallback: nil)
   }
 
 }

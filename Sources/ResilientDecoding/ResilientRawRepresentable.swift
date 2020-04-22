@@ -67,11 +67,11 @@ extension KeyedDecodingContainer {
       T.DecodingFallback == T
   {
     resilientlyDecode(
-      ResilientRawRepresentableContainer<T>.self,
-      forKey: key,
+      valueForKey: key,
       fallback: .decodingFallback,
-      options: [])
-        .map { $0.value }
+      /// For a non-optional `ResilientRawRepresentable`, a missing key or `nil` value are considered errors
+      behaveLikeOptional: false,
+      body: resilientlyDecodeRawRepresentable)
   }
 
   /**
@@ -82,8 +82,10 @@ extension KeyedDecodingContainer {
     where
       T.DecodingFallback == Void
   {
-    resilientlyDecode(ResilientRawRepresentableContainer<T>?.self, forKey: key)
-      .map { $0.map { $0.value } }
+    resilientlyDecode(
+      valueForKey: key,
+      fallback: nil,
+      body: { try resilientlyDecodeRawRepresentable(from: $0).map { $0 } })
   }
 
   /**
@@ -98,12 +100,12 @@ extension KeyedDecodingContainer {
     resilientlyDecode(
       valueForKey: key,
       fallback: nil,
-      options: .behaveLikeOptional,
-      decode: { decoder in
+      body: { decoder in
         do {
-          return Resilient(try ResilientRawRepresentableContainer(from: decoder).value)
+          return try resilientlyDecodeRawRepresentable(from: decoder).map { $0 }
         } catch {
-          return decoder.resilient(T.decodingFallback, error: error)
+          decoder.resilientDecodingHandled(error)
+          return Resilient(T.decodingFallback, outcome: .recoveredFrom(error, wasReported: true))
         }
       })
   }
@@ -113,12 +115,7 @@ extension KeyedDecodingContainer {
    */
   public func decode<T: ResilientRawRepresentable>(_ type: Resilient<[T]>.Type, forKey key: Key) throws -> Resilient<[T]>
   {
-    resilientlyDecodeArray(of: ResilientRawRepresentableContainer<T>.self, forKey: key)
-      .map { array in
-        array.map { container in
-          container.value
-        }
-      }
+    resilientlyDecode(valueForKey: key, fallback: []) { $0.resilientlyDecodeArray(decodeElement: resilientlyDecodeRawRepresentable) }
   }
 
   /**
@@ -126,14 +123,7 @@ extension KeyedDecodingContainer {
    */
   public func decode<T: ResilientRawRepresentable>(_ type: Resilient<[T]?>.Type, forKey key: Key) throws -> Resilient<[T]?>
   {
-    resilientlyDecodeArray(of: ResilientRawRepresentableContainer<T>.self, forKey: key)
-      .map { optionalArray in
-        optionalArray.map { array in
-          array.map { container in
-            container.value
-          }
-        }
-      }
+    resilientlyDecode(valueForKey: key, fallback: nil) { $0.resilientlyDecodeArray(decodeElement: resilientlyDecodeRawRepresentable).map { $0 } }
   }
 
 }
@@ -166,27 +156,28 @@ extension KeyedDecodingContainer {
 
 // MARK: - Private
 
-private struct ResilientRawRepresentableContainer<Value: ResilientRawRepresentable>: Decodable {
-  let value: Value
-  init(from decoder: Decoder) throws {
-    if Value.isFrozen {
-      value = try Value(from: decoder)
-    } else {
-      let rawValue = try Value.RawValue(from: decoder)
-      if let value = Value(rawValue: rawValue) {
-        self.value = value
-      } else {
-        throw UnknownNovelValueError(novelValue: rawValue)
-      }
-    }
-  }
-  private init(_ value: Value) {
-    self.value = value
-  }
+/**
+ This both `throws` and returns a `Resilient` to match the signature of the `body` argument to `resilientlyDecode`. Only successful `Resilient` values should be returned from this function.
+ */
+private func resilientlyDecodeRawRepresentable<Value>(
+  from decoder: Decoder) throws -> Resilient<Value>
+  where Value: ResilientRawRepresentable
+{
+  Resilient(try resilientlyDecodeRawRepresentable(from: decoder))
 }
 
-private extension ResilientRawRepresentableContainer where Value.DecodingFallback == Value {
-  static var decodingFallback: ResilientRawRepresentableContainer {
-    ResilientRawRepresentableContainer(Value.decodingFallback)
+private func resilientlyDecodeRawRepresentable<Value>(
+  from decoder: Decoder) throws -> Value
+  where Value: ResilientRawRepresentable
+{
+  if Value.isFrozen {
+    return try Value(from: decoder)
+  } else {
+    let rawValue = try Value.RawValue(from: decoder)
+    if let value = Value(rawValue: rawValue) {
+      return value
+    } else {
+      throw UnknownNovelValueError(novelValue: rawValue)
+    }
   }
 }

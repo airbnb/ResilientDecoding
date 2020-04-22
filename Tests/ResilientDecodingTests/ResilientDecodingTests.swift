@@ -42,3 +42,31 @@ extension XCTestCase {
   }
 
 }
+
+#if DEBUG
+/**
+ Since `Error` is not `Equatable`, we use this `enum` to verify the correct outcome was encountered
+ */
+enum ExpectedDecodingOutcome {
+  case decodedSuccessfully
+  case keyNotFound
+  case valueWasNil
+  case recoveredFromError(wasReported: Bool)
+}
+
+extension ResilientDecodingOutcome {
+  func `is`(_ expected: ExpectedDecodingOutcome) -> Bool {
+    switch (self, expected) {
+    case
+      (.decodedSuccessfully, .decodedSuccessfully),
+      (.keyNotFound, .keyNotFound),
+      (.valueWasNil, .valueWasNil):
+        return true
+    case let (.recoveredFrom(_, lhs), .recoveredFromError(rhs)):
+      return lhs == rhs
+    default:
+      return false
+    }
+  }
+}
+#endif

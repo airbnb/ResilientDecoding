@@ -2,7 +2,7 @@
 // Copyright © 2020 Airbnb Inc. All rights reserved.
 
 import XCTest
-@testable import ResilientDecoding
+import ResilientDecoding
 
 private struct ResilientRawRepresentableEnumWrapper: Decodable {
   @Resilient var resilientEnumWithFallback: ResilientEnumWithFallback
@@ -32,12 +32,14 @@ final class ResilientRawRepresentableEnumTests: XCTestCase {
     XCTAssertEqual(mock.optionalResilientFrozenEnum, .existing)
     XCTAssertEqual(mock.optionalResilientEnumWithFallback, .existing)
     XCTAssertEqual(mock.optionalResilientFrozenEnumWithFallback, .existing)
+    #if DEBUG
     XCTAssertNil(mock.$resilientEnumWithFallback.error)
     XCTAssertNil(mock.$resilientFrozenEnumWithFallback.error)
     XCTAssertNil(mock.$optionalResilientEnum.error)
     XCTAssertNil(mock.$optionalResilientFrozenEnum.error)
     XCTAssertNil(mock.$optionalResilientEnumWithFallback.error)
     XCTAssertNil(mock.$optionalResilientFrozenEnumWithFallback.error)
+    #endif
   }
 
   func testDecodesNullOptionalValuesWithoutErrors() throws {
@@ -55,10 +57,12 @@ final class ResilientRawRepresentableEnumTests: XCTestCase {
     XCTAssertNil(mock.optionalResilientFrozenEnum)
     XCTAssertNil(mock.optionalResilientEnumWithFallback)
     XCTAssertNil(mock.optionalResilientFrozenEnumWithFallback)
+    #if DEBUG
     XCTAssertNil(mock.$optionalResilientEnum.error)
     XCTAssertNil(mock.$optionalResilientFrozenEnum.error)
     XCTAssertNil(mock.$optionalResilientEnumWithFallback.error)
     XCTAssertNil(mock.$optionalResilientFrozenEnumWithFallback.error)
+    #endif
   }
 
   func testDecodesMissingOptionalValuesWithoutErrors() throws {
@@ -72,10 +76,12 @@ final class ResilientRawRepresentableEnumTests: XCTestCase {
     XCTAssertNil(mock.optionalResilientFrozenEnum)
     XCTAssertNil(mock.optionalResilientEnumWithFallback)
     XCTAssertNil(mock.optionalResilientFrozenEnumWithFallback)
+    #if DEBUG
     XCTAssertNil(mock.$optionalResilientEnum.error)
     XCTAssertNil(mock.$optionalResilientFrozenEnum.error)
     XCTAssertNil(mock.$optionalResilientEnumWithFallback.error)
     XCTAssertNil(mock.$optionalResilientFrozenEnumWithFallback.error)
+    #endif
   }
 
   func testResilientlyDecodesMissingValues() throws {
@@ -86,8 +92,10 @@ final class ResilientRawRepresentableEnumTests: XCTestCase {
       expectedErrorCount: 2)
     XCTAssertEqual(mock.resilientEnumWithFallback, .unknown)
     XCTAssertEqual(mock.resilientFrozenEnumWithFallback, .unknown)
+    #if DEBUG
     XCTAssertNotNil(mock.$resilientEnumWithFallback.error)
     XCTAssertNotNil(mock.$resilientFrozenEnumWithFallback.error)
+    #endif
   }
 
   func testResilientlyDecodesNovelCases() throws {
@@ -108,7 +116,8 @@ final class ResilientRawRepresentableEnumTests: XCTestCase {
     XCTAssertNil(mock.optionalResilientFrozenEnum)
     XCTAssertEqual(mock.optionalResilientEnumWithFallback, .unknown)
     XCTAssertEqual(mock.optionalResilientFrozenEnumWithFallback, .unknown)
-
+    
+    #if DEBUG
     /// All properties provide an error for inspection, but only _frozen_ types report the error (hence "3" expected errors above)
     XCTAssertNotNil(mock.$resilientEnumWithFallback.error)
     XCTAssertNotNil(mock.$resilientFrozenEnumWithFallback.error)
@@ -116,6 +125,7 @@ final class ResilientRawRepresentableEnumTests: XCTestCase {
     XCTAssertNotNil(mock.$optionalResilientFrozenEnum.error)
     XCTAssertNotNil(mock.$optionalResilientEnumWithFallback.error)
     XCTAssertNotNil(mock.$optionalResilientFrozenEnumWithFallback.error)
+    #endif
   }
 
   func testResilientlyDecodesInvalidCases() throws {
@@ -136,7 +146,8 @@ final class ResilientRawRepresentableEnumTests: XCTestCase {
     XCTAssertNil(mock.optionalResilientFrozenEnum)
     XCTAssertEqual(mock.optionalResilientEnumWithFallback, .unknown)
     XCTAssertEqual(mock.optionalResilientFrozenEnumWithFallback, .unknown)
-
+    
+    #if DEBUG
     /// Because this is invalid input and not a novel case, errors are provided at the property level _and_ reported (hence "6" expected errors above)
     XCTAssertNotNil(mock.$resilientEnumWithFallback.error)
     XCTAssertNotNil(mock.$resilientFrozenEnumWithFallback.error)
@@ -144,6 +155,7 @@ final class ResilientRawRepresentableEnumTests: XCTestCase {
     XCTAssertNotNil(mock.$optionalResilientFrozenEnum.error)
     XCTAssertNotNil(mock.$optionalResilientEnumWithFallback.error)
     XCTAssertNotNil(mock.$optionalResilientFrozenEnumWithFallback.error)
+    #endif
   }
 
 }
