@@ -157,7 +157,7 @@ extension KeyedDecodingContainer {
 // MARK: - Private
 
 /**
- This both `throws` and returns a `Resilient` to match the signature of the `body` argument to `resilientlyDecode`. Only successful `Resilient` values should be resturned from this function.
+ This both `throws` and returns a `Resilient` to match the signature of the `body` argument to `resilientlyDecode`. Only successful `Resilient` values should be returned from this function.
  */
 private func resilientlyDecodeRawRepresentable<Value>(
   from decoder: Decoder) throws -> Resilient<Value>

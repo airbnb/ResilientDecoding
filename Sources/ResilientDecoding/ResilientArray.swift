@@ -39,7 +39,7 @@ extension KeyedDecodingContainer {
 }
 
 extension Decoder {
-  
+
   func resilientlyDecodeArray<Element: Decodable>() -> Resilient<[Element]> {
     resilientlyDecodeArray(decodeElement: Element.init)
   }

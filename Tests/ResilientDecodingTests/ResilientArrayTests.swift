@@ -80,7 +80,7 @@ final class ResilientArrayTests: XCTestCase {
     #endif
   }
 
-  func testResilientlyDecodesArratWithInvalidElements() throws {
+  func testResilientlyDecodesArrayWithInvalidElements() throws {
     let mock = try decodeMock(ResilientArrayWrapper.self, """
       {
         "resilientArray": [1, "2", 3, "4", 5],

@@ -37,13 +37,17 @@ public struct Resilient<Value: Decodable>: Decodable {
 
   /**
    Transforms the value of a `Resilient` type.
-   If `self` is a resilient array,  care should be taken to ensure that the `value.count` == `transform(value).count` in order to not break the `results` property.
+   If `self` is a resilient array, care should be taken to ensure that the `value.count` == `transform(value).count` in order to not break the `results` property.
    */
   func map<T>(transform: (Value) -> T) -> Resilient<T> {
     Resilient<T>(transform(wrappedValue), outcome: outcome)
   }
   
   #if DEBUG
+  /**
+   `subscript(dynamicMember:)` is defined in files like `ResilientArray+DecodingOutcome`, and is used to provide certain properties only on `@Resilient` properties of certain types. For instance `errors` and `results` are only present on resilient arrays. The reason we need to use `@dynamicMemberLookup` is so that we can add a generic constraint (which we can to `subscript`, but not to properties).
+   `@dynamicMemberLookup` also cannot be declared on an extension, so must be declared here.
+   */
   @dynamicMemberLookup
   public struct ProjectedValue {
     public let outcome: ResilientDecodingOutcome
@@ -109,7 +113,7 @@ extension KeyedDecodingContainer {
 
   /**
    Resiliently decodes a value for the specified key, using `fallback` if an error is encountered.
-   This form allows the caller to provide their own `Resilient` with custom errors, which is only used for `ResilientArray` and `ResilientRawRepresentable` optionals that define a `decodingFallback`.
+   - parameter behaveLikeOptional: If `true`, we don't report errors for missing keys and nil values
    */
   func resilientlyDecode<T: Decodable>(
     valueForKey key: Key,
@@ -133,7 +137,7 @@ extension KeyedDecodingContainer {
       }
     } catch {
       /**
-       There is no `Decoder` to report an error to here, but this case should almost never happen, as `superDecoder` is meant to wrap any and throw it only at the moment something tries to decode a value from it. For isntance, `JSONDecoder` does not throw errors from this method: https://github.com/apple/swift/blob/88b093e9d77d6201935a2c2fb13f27d961836777/stdlib/public/Darwin/Foundation/JSONEncoder.swift#L1657-L1661
+       There is no `Decoder` to report an error to here, but this case should almost never happen, as `superDecoder` is meant to wrap any and throw it only at the moment something tries to decode a value from it. For instance, `JSONDecoder` does not throw errors from this method: https://github.com/apple/swift/blob/88b093e9d77d6201935a2c2fb13f27d961836777/stdlib/public/Darwin/Foundation/JSONEncoder.swift#L1657-L1661
        */
       return Resilient(fallback(), outcome: .recoveredFrom(error, wasReported: false))
     }
