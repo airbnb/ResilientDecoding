@@ -34,10 +34,10 @@ extension XCTestCase {
     let decoder = JSONDecoder()
     let errorReporter = decoder.enableResilientDecodingErrorReporting()
     let decoded = try decoder.decode(T.self, from: string.data(using: .utf8)!)
-    let errors = errorReporter.flushReportedErrors()
-    XCTAssertEqual(errors.count, expectedErrorCount)
+    let errorDigest = errorReporter.flushReportedErrors()
+    XCTAssertEqual(errorDigest?.errors.count ?? 0, expectedErrorCount)
     // Ensure that errors were actually flushed
-    XCTAssertEqual(errorReporter.flushReportedErrors().count, 0)
+    XCTAssertNil(errorReporter.flushReportedErrors())
     return decoded
   }
 
