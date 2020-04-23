@@ -76,3 +76,19 @@ private struct DecodingResultContainer<Success: Decodable>: Decodable {
      }
   }
 }
+
+// MARK: - Catch Common Mistakes
+
+/**
+ For the following cases, the user probably meant to use `[String: T]` as the property type.
+ */
+extension KeyedDecodingContainer {
+  public func decode<T: Decodable>(_ type: Resilient<[String: T?]>.Type, forKey key: Key) throws -> Resilient<[T?]> {
+    assertionFailure()
+    return try decode(Resilient<[T]>.self, forKey: key).map { $0 }
+  }
+  public func decode<T: Decodable>(_ type: Resilient<[String: T?]?>.Type, forKey key: Key) throws -> Resilient<[T?]?> {
+    assertionFailure()
+    return try decode(Resilient<[T]>.self, forKey: key).map { $0 }
+  }
+}
