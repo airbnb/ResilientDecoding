@@ -72,6 +72,7 @@ extension ResilientDecodingOutcome {
       assert(!wasReported)
       return error
     case .recoveredFrom(let error, _):
+      /// When recovering from a top level error, we can provide the error value in the array, instead of returning an empty array. We believe this is a win for usability.
       return .init(results: [.failure(error)])
     }
   }
