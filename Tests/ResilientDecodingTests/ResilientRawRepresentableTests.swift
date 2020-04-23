@@ -1,5 +1,4 @@
-// MIT License
-//
+// Created by George Leontiev on 3/31/20.
 // Copyright (c) 2020 Airbnb
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,8 +18,6 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-
-// Created by George Leontiev on 3/31/20.
 
 import XCTest
 import ResilientDecoding
