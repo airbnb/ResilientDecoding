@@ -21,7 +21,7 @@ final class ResilientDecodingErrorReporterTests: XCTestCase {
       }
       """.data(using: .utf8)!)
     #if DEBUG
-    XCTAssertEqual(errorReporter.debugDescription, """
+    XCTAssertEqual(errorReporter.flushReportedErrors()?.debugDescription, """
       resilientArray
         Index 1
           - Could not decode as `Int`
