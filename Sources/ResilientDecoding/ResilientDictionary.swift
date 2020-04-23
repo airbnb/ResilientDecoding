@@ -41,8 +41,11 @@ extension Decoder {
     resilientlyDecodeDictionary(of: Element.self, transform: { $0 })
   }
 
+  /**
+   We can't just use `map` because the transform needs to happen _before_ we wrap the value in `Resilient` so that that the element type of `DictionaryDecodingError` is correct.
+   */
   func resilientlyDecodeDictionary<IntermediateElement: Decodable, Element>(
-    of elementType: IntermediateElement.Type,
+    of intermediateElementType: IntermediateElement.Type,
     transform: (IntermediateElement) -> Element) -> Resilient<[String: Element]>
   {
     do {

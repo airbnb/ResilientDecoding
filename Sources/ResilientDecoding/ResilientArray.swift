@@ -39,9 +39,18 @@ extension KeyedDecodingContainer {
 }
 
 extension Decoder {
-  
-  func resilientlyDecodeArray<Element: Decodable>(
-    decodeElement: (Decoder) throws -> Element = Element.init) -> Resilient<[Element]>
+
+  func resilientlyDecodeArray<Element: Decodable>() -> Resilient<[Element]>
+  {
+    resilientlyDecodeArray(of: Element.self, transform: { $0 })
+  }
+
+  /**
+   We can't just use `map` because the transform needs to happen _before_ we wrap the value in `Resilient` so that that the element type of `ArrayDecodingError` is correct.
+   */
+  func resilientlyDecodeArray<IntermediateElement: Decodable, Element>(
+    of intermediateElementType: IntermediateElement.Type,
+    transform: (IntermediateElement) -> Element) -> Resilient<[Element]>
   {
     do {
       var container = try unkeyedContainer()
@@ -53,7 +62,7 @@ extension Decoder {
         /// It is very unlikely that an error will be thrown here, so it is fine that this would fail the entire array
         let elementDecoder = try container.superDecoder()
         do {
-          results.append(.success(try decodeElement(elementDecoder)))
+          results.append(.success(transform(try IntermediateElement(from: elementDecoder))))
         } catch {
           elementDecoder.resilientDecodingHandled(error)
           results.append(.failure(error))
