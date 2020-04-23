@@ -146,4 +146,29 @@ final class ResilientRawRepresentableDictionaryTests: XCTestCase {
     #endif
   }
 
+  /**
+   When a `Dictionary` is decoded, the keys are not transformed by the `keyDecodingStrategy`.
+   */
+  func testKeyDecodingStrategyIsIgnored() throws {
+    let decoder = JSONDecoder()
+    decoder.keyDecodingStrategy = .convertFromSnakeCase
+    struct Mock: Decodable {
+      @Resilient var resilientDictionary: [String: Int]
+    }
+    let mock = try decoder.decode(Mock.self, from: """
+      {
+        "resilient_dictionary": {
+          "the_number_one": 1,
+          "the_number_two": 2,
+          "the_number_three": 3,
+        }
+      }
+      """.data(using: .utf8)!)
+    XCTAssertEqual(mock.resilientDictionary, [
+      "the_number_one": 1,
+      "the_number_two": 2,
+      "the_number_three": 3
+    ])
+  }
+
 }
