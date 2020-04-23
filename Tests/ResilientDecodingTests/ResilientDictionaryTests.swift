@@ -124,36 +124,4 @@ final class DictionaryTests: XCTestCase {
     #endif
   }
 
-  /**
-   This tests internal functionality which decodes a dictionary of results to make sure the coding paths aren't impacted by https://bugs.swift.org/browse/SR-6294
-   */
-  func testDictionaryOfResults() throws {
-    /// `dictionaryOfResults` is internal to `ResilientDecoding` and can only be accessed via a `@testable` import which doesn't work in release.
-    #if DEBUG
-    let data = """
-      {
-        "dictionary": {
-          "a": "a",
-          "b": "b",
-          "c": "c"
-        }
-      }
-      """.data(using: .utf8)!
-    struct Mock: Swift.Decodable {
-      init(from decoder: Decoder) throws {
-        let dictionaryDecoder = try decoder.container(keyedBy: CodingKey.self).superDecoder(forKey: .dictionary)
-        _ = try dictionaryDecoder.decodeDictionaryOfResults(of: String.self) { decoder in
-          let value = try String(from: decoder)
-          XCTAssertEqual(decoder.codingPath.map { $0.stringValue }, [CodingKey.dictionary.stringValue, value])
-          return value
-        }
-      }
-      private enum CodingKey: String, Swift.CodingKey {
-        case dictionary
-      }
-    }
-    _ = try JSONDecoder().decode(Mock.self, from: data)
-    #endif
-  }
-
 }

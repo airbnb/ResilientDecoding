@@ -126,6 +126,33 @@ extension KeyedDecodingContainer {
     resilientlyDecode(valueForKey: key, fallback: nil) { $0.resilientlyDecodeArray(decodeElement: resilientlyDecodeRawRepresentable).map { $0 } }
   }
 
+  /**
+   When decoding a dictionary of `ResilientRawRepresentable` values,  elements are omitted as errors are encountered. The `decodingFallback` is never used.
+   */
+  public func decode<T: ResilientRawRepresentable>(_ type: Resilient<[String: T]>.Type, forKey key: Key) throws -> Resilient<[String: T]>
+  {
+    resilientlyDecode(valueForKey: key, fallback: [:]) { decoder in
+      decoder.resilientlyDecodeDictionary(
+        of: ResilientRawRepresentableContainer.self,
+        transform: { $0.value })
+      }
+  }
+
+  /**
+   When decoding a dictionary of `ResilientRawRepresentable` values,  elements are omitted as errors are encountered. The `decodingFallback` is never used.
+   */
+  public func decode<T: ResilientRawRepresentable>(_ type: Resilient<[String: T]?>.Type, forKey key: Key) throws -> Resilient<[String: T]?>
+  {
+    resilientlyDecode(valueForKey: key, fallback: nil) { decoder in
+      decoder.resilientlyDecodeDictionary(
+        of: ResilientRawRepresentableContainer.self,
+        transform: { $0.value })
+        /// Transforms `Resilient<[String: T]>` into `Resilient<[String: T]?>`
+        .map { $0 }
+    }
+  }
+
+
 }
 
 // MARK: - Catch Common Mistakes
@@ -170,14 +197,21 @@ private func resilientlyDecodeRawRepresentable<Value>(
   from decoder: Decoder) throws -> Value
   where Value: ResilientRawRepresentable
 {
-  if Value.isFrozen {
-    return try Value(from: decoder)
-  } else {
-    let rawValue = try Value.RawValue(from: decoder)
-    if let value = Value(rawValue: rawValue) {
-      return value
+  return try ResilientRawRepresentableContainer(from: decoder).value
+}
+
+private struct ResilientRawRepresentableContainer<Value: ResilientRawRepresentable>: Decodable {
+  let value: Value
+  init(from decoder: Decoder) throws {
+    if Value.isFrozen {
+      value = try Value(from: decoder)
     } else {
-      throw UnknownNovelValueError(novelValue: rawValue)
+      let rawValue = try Value.RawValue(from: decoder)
+      if let value = Value(rawValue: rawValue) {
+        self.value = value
+      } else {
+        throw UnknownNovelValueError(novelValue: rawValue)
+      }
     }
   }
 }

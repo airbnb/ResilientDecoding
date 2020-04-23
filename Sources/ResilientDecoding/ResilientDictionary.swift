@@ -36,27 +36,24 @@ extension KeyedDecodingContainer {
 
 extension Decoder {
 
-  func resilientlyDecodeDictionary<Element: Decodable>(
-    decodeElement: (Decoder) throws -> Element = Element.init) -> Resilient<[String: Element]>
+  func resilientlyDecodeDictionary<Element: Decodable>() -> Resilient<[String: Element]>
+  {
+    resilientlyDecodeDictionary(of: Element.self, transform: { $0 })
+  }
+
+  func resilientlyDecodeDictionary<IntermediateElement: Decodable, Element>(
+    of elementType: IntermediateElement.Type,
+    transform: (IntermediateElement) -> Element) -> Resilient<[String: Element]>
   {
     do {
-      return Resilient(try decodeDictionaryOfResults(of: Element.self))
+      let value = try singleValueContainer()
+        .decode([String: DecodingResultContainer<IntermediateElement>].self)
+        .mapValues { $0.result.map(transform) }
+      return Resilient(value)
     } catch {
       resilientDecodingHandled(error)
       return Resilient([:], outcome: .recoveredFrom(error, wasReported: true))
     }
-  }
-
-  /**
-   This function is `internal` so it can be accessed from the unit tests
-   */
-  func decodeDictionaryOfResults<Element: Decodable>(
-    of elementType: Element.Type,
-    decodeElement: (Decoder) throws -> Element = Element.init) throws -> [String: Result<Element, Error>]
-  {
-    return try singleValueContainer()
-      .decode([String: DecodingResultContainer<Element>].self)
-      .mapValues { $0.result }
   }
 
 }
@@ -65,18 +62,17 @@ extension Decoder {
 
 /**
  We can't use `KeyedDecodingContainer` to decode a dictionary because it will use `keyDecodingStrategy` to map the keys, which dictionary values do not. Instead we pull out the element decoders using this wrapper type.
- - note: We need to be cautious of https://bugs.swift.org/browse/SR-6294, but the coding path remains correct as long as we stay at the place in the decoding tree. There is a test that validates this functionality in `ResilientDictionaryTests.swift`.
  */
 private struct DecodingResultContainer<Success: Decodable>: Decodable {
   let result: Result<Success, Error>
   init(from decoder: Decoder) throws {
-    result = Result {
-      do {
-        return try Success(from: decoder)
-      } catch {
-        decoder.resilientDecodingHandled(error)
-        throw error
-      }
-    }
+    result =  Result {
+       do {
+         return try Success(from: decoder)
+       } catch {
+         decoder.resilientDecodingHandled(error)
+         throw error
+       }
+     }
   }
 }
