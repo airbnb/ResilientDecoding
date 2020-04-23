@@ -48,7 +48,7 @@ pod 'ResilientDecoding', '~> 0.9'
 
 ## Decoding
 
-The main interface to this package is the `@Resilient` property wrapper. It can be applied to three kinds of properties: `Optional`,  `Array`, and custom types conforming to the `ResilientRawRepresentable` protocol that this package provides. 
+The main interface to this package is the `@Resilient` property wrapper. It can be applied to four kinds of properties: `Optional`,  `Array`,  `Dictionary`, and custom types conforming to the `ResilientRawRepresentable` protocol that this package provides. 
 
 ### `Optional`
 
@@ -57,6 +57,10 @@ Optionals are the simplest type of property that can be made `Resilient`. A prop
 ### `Array`
 
 `Resilient` can also be applied to an array or an optional array (`[T]?`). A property written as `@Resilient var foo: [Int]` will be initialized with an empty array if the `foo` key is missing or if the value is something unexpected, like `String`. Likewise, if any _element_ of this array fails to decode, that element will be omitted. The optional array variant of this will set the value to `nil` if the key is missing or has a null value, and an empty array otherwise.
+
+### `Dictionary`
+
+`Resilient` can also be applied to a (string-keyed) dictionary or an optional dictionary (`[String: T]?`). A property written as `@Resilient var foo: [String: Int]` will be initialized with an empty dictionary if the `foo` key is missing or if the value is something unexpected, like `String`. Likewise, if any _value_ in the dictionary fails to decode, that value will be omitted. The optional dictionary variant of this will set the value to `nil` if the key is missing or has a null value, and an empty array otherwise.
 
 ### `ResilientRawRepresentable`
 

@@ -17,9 +17,9 @@ extension Resilient {
    - parameter transform: While the two lines above both say `{ $0 }` they are actually different because the first one is of type `([String: T]) -> [String: T]` and the second is of type `([String: T]) -> [String: T]?`.
    */
   private init<T>(_ results: [String: Result<T, Error>], transform: ([String: T]) -> Value) {
-    let elements = results.compactMapValues { try? $0.get() }
-    let value = transform(elements)
-    if elements.count == results.count {
+    let dictionary = results.compactMapValues { try? $0.get() }
+    let value = transform(dictionary)
+    if dictionary.count == results.count {
       self.init(value, outcome: .decodedSuccessfully)
     } else {
       #if DEBUG
@@ -41,8 +41,8 @@ extension ResilientDecodingOutcome {
   /**
    A type representing some number of errors encountered while decoding a dictionary
    */
-  public struct DictionaryDecodingError<Element>: Error {
-    public let results: [String: Result<Element, Error>]
+  public struct DictionaryDecodingError<Value>: Error {
+    public let results: [String: Result<Value, Error>]
     public var errors: [Error] {
       /// It is currently impossible to have both a `topLevelError` and `results` at the same time, but this code is simpler than having an `enum` nested in this type.
       [topLevelError].compactMap { $0 } + results.compactMap { pair in
@@ -61,7 +61,7 @@ extension ResilientDecodingOutcome {
     private var topLevelError: Error?
 
     /// `DictionaryDecodingError` should only be initialized in this file
-    fileprivate init(topLevelError: Error?, results: [String: Result<Element, Error>]) {
+    fileprivate init(topLevelError: Error?, results: [String: Result<Value, Error>]) {
       self.topLevelError = topLevelError
       self.results = results
     }

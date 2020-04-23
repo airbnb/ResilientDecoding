@@ -20,7 +20,7 @@ extension KeyedDecodingContainer {
   /**
    Decodes a `Resilient` dictionary, omitting elements as errors are encountered.
    */
-  public func decode<Element>(_ type: Resilient<[String: Element]>.Type, forKey key: Key) throws -> Resilient<[String: Element]>
+  public func decode<Value>(_ type: Resilient<[String: Value]>.Type, forKey key: Key) throws -> Resilient<[String: Value]>
   {
     resilientlyDecode(valueForKey: key, fallback: [:]) { $0.resilientlyDecodeDictionary() }
   }
@@ -28,7 +28,7 @@ extension KeyedDecodingContainer {
   /**
    Decodes an optional `Resilient` dictionary. A missing key or `nil` value will silently set the property to `nil`.
    */
-  public func decode<Element: Decodable>(_ type: Resilient<[String: Element]?>.Type, forKey key: Key) throws -> Resilient<[String: Element]?> {
+  public func decode<Value: Decodable>(_ type: Resilient<[String: Value]?>.Type, forKey key: Key) throws -> Resilient<[String: Value]?> {
     resilientlyDecode(valueForKey: key, fallback: nil) { $0.resilientlyDecodeDictionary().map { $0 } }
   }
 
@@ -36,21 +36,21 @@ extension KeyedDecodingContainer {
 
 extension Decoder {
 
-  func resilientlyDecodeDictionary<Element: Decodable>() -> Resilient<[String: Element]>
+  func resilientlyDecodeDictionary<Value: Decodable>() -> Resilient<[String: Value]>
   {
-    resilientlyDecodeDictionary(of: Element.self, transform: { $0 })
+    resilientlyDecodeDictionary(of: Value.self, transform: { $0 })
   }
 
   /**
-   We can't just use `map` because the transform needs to happen _before_ we wrap the value in `Resilient` so that that the element type of `DictionaryDecodingError` is correct.
+   We can't just use `map` because the transform needs to happen _before_ we wrap the value in `Resilient` so that that the value type of `DictionaryDecodingError` is correct.
    */
-  func resilientlyDecodeDictionary<IntermediateElement: Decodable, Element>(
-    of intermediateElementType: IntermediateElement.Type,
-    transform: (IntermediateElement) -> Element) -> Resilient<[String: Element]>
+  func resilientlyDecodeDictionary<IntermediateValue: Decodable, Value>(
+    of intermediateValueType: IntermediateValue.Type,
+    transform: (IntermediateValue) -> Value) -> Resilient<[String: Value]>
   {
     do {
       let value = try singleValueContainer()
-        .decode([String: DecodingResultContainer<IntermediateElement>].self)
+        .decode([String: DecodingResultContainer<IntermediateValue>].self)
         .mapValues { $0.result.map(transform) }
       return Resilient(value)
     } catch {
