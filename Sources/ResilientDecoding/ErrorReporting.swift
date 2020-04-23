@@ -194,7 +194,7 @@ private extension Error {
 private struct MayBeMissingReportedErrors: Error { }
 
 /**
- An error which is surfaced at the property level but is not reported via `ResilientDecodingErrorReporter` by default (it can still be accessed by providing the `includeUnknownNovelValueErrors: true` argument to `flushReportedErrors`). This error is meant to indicate that the client detected a type it does not understand but believes to be valid, for instance a novel `case` of a `String`-backed `enum`.
+ An error which is surfaced at the property level but is not reported via `ResilientDecodingErrorReporter` by default (it can still be accessed by calling  `errorDigest.errors(includeUnknownNovelValueErrors: true)`). This error is meant to indicate that the client detected a type it does not understand but believes to be valid, for instance a novel `case` of a `String`-backed `enum`.
  This is primarily used by `ResilientRawRepresentable`, but more complex use-cases exist where it is desirable to suppress error reporting but it would be awkward to implement using `ResilientRawRepresentable`. One such example is a type which inspects a `type` key before deciding how to decode the rest of the data (this pattern is often used to decode `enum`s with associated values). If it is desirable to suppress error reporting when encountering a new `type`, the custom type can explicitly throw this error.
  */
 public struct UnknownNovelValueError: Error {
