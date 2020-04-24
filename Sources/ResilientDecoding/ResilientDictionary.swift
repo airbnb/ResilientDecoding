@@ -70,13 +70,13 @@ private struct DecodingResultContainer<Success: Decodable>: Decodable {
   let result: Result<Success, Error>
   init(from decoder: Decoder) throws {
     result = Result {
-       do {
-         return try Success(from: decoder)
-       } catch {
-         decoder.resilientDecodingHandled(error)
-         throw error
-       }
-     }
+      do {
+        return try Success(from: decoder)
+      } catch {
+        decoder.resilientDecodingHandled(error)
+        throw error
+      }
+    }
   }
 }
 
