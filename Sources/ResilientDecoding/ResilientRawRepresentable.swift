@@ -71,7 +71,7 @@ extension KeyedDecodingContainer {
       fallback: .decodingFallback,
       /// For a non-optional `ResilientRawRepresentable`, a missing key or `nil` value are considered errors
       behaveLikeOptional: false,
-      body: resilientlyDecodeRawRepresentable)
+      body: { Resilient(try ResilientRawRepresentableContainer(from: $0).value) })
   }
 
   /**
@@ -85,7 +85,7 @@ extension KeyedDecodingContainer {
     resilientlyDecode(
       valueForKey: key,
       fallback: nil,
-      body: { try resilientlyDecodeRawRepresentable(from: $0).map { $0 } })
+      body: { Resilient(try ResilientRawRepresentableContainer(from: $0).value).map { $0 } })
   }
 
   /**
@@ -102,7 +102,7 @@ extension KeyedDecodingContainer {
       fallback: nil,
       body: { decoder in
         do {
-          return try resilientlyDecodeRawRepresentable(from: decoder).map { $0 }
+          return Resilient(try ResilientRawRepresentableContainer(from: decoder).value).map { $0 }
         } catch {
           decoder.resilientDecodingHandled(error)
           return Resilient(T.decodingFallback, outcome: .recoveredFrom(error, wasReported: true))
@@ -115,7 +115,11 @@ extension KeyedDecodingContainer {
    */
   public func decode<T: ResilientRawRepresentable>(_ type: Resilient<[T]>.Type, forKey key: Key) throws -> Resilient<[T]>
   {
-    resilientlyDecode(valueForKey: key, fallback: []) { $0.resilientlyDecodeArray(decodeElement: resilientlyDecodeRawRepresentable) }
+    resilientlyDecode(valueForKey: key, fallback: []) { decoder in
+      decoder.resilientlyDecodeArray(
+        of: ResilientRawRepresentableContainer.self,
+        transform: { $0.value })
+      }
   }
 
   /**
@@ -123,8 +127,41 @@ extension KeyedDecodingContainer {
    */
   public func decode<T: ResilientRawRepresentable>(_ type: Resilient<[T]?>.Type, forKey key: Key) throws -> Resilient<[T]?>
   {
-    resilientlyDecode(valueForKey: key, fallback: nil) { $0.resilientlyDecodeArray(decodeElement: resilientlyDecodeRawRepresentable).map { $0 } }
+    resilientlyDecode(valueForKey: key, fallback: nil) { decoder in
+      decoder.resilientlyDecodeArray(
+        of: ResilientRawRepresentableContainer.self,
+        transform: { $0.value })
+        /// Transforms `Resilient<[String: T]>` into `Resilient<[String: T]?>`
+        .map { $0 }
+    }
   }
+
+  /**
+   When decoding a dictionary of `ResilientRawRepresentable` values,  elements are omitted as errors are encountered. The `decodingFallback` is never used.
+   */
+  public func decode<T: ResilientRawRepresentable>(_ type: Resilient<[String: T]>.Type, forKey key: Key) throws -> Resilient<[String: T]>
+  {
+    resilientlyDecode(valueForKey: key, fallback: [:]) { decoder in
+      decoder.resilientlyDecodeDictionary(
+        of: ResilientRawRepresentableContainer.self,
+        transform: { $0.value })
+      }
+  }
+
+  /**
+   When decoding a dictionary of `ResilientRawRepresentable` values,  elements are omitted as errors are encountered. The `decodingFallback` is never used.
+   */
+  public func decode<T: ResilientRawRepresentable>(_ type: Resilient<[String: T]?>.Type, forKey key: Key) throws -> Resilient<[String: T]?>
+  {
+    resilientlyDecode(valueForKey: key, fallback: nil) { decoder in
+      decoder.resilientlyDecodeDictionary(
+        of: ResilientRawRepresentableContainer.self,
+        transform: { $0.value })
+        /// Transforms `Resilient<[String: T]>` into `Resilient<[String: T]?>`
+        .map { $0 }
+    }
+  }
+
 
 }
 
@@ -156,28 +193,18 @@ extension KeyedDecodingContainer {
 
 // MARK: - Private
 
-/**
- This both `throws` and returns a `Resilient` to match the signature of the `body` argument to `resilientlyDecode`. Only successful `Resilient` values should be returned from this function.
- */
-private func resilientlyDecodeRawRepresentable<Value>(
-  from decoder: Decoder) throws -> Resilient<Value>
-  where Value: ResilientRawRepresentable
-{
-  Resilient(try resilientlyDecodeRawRepresentable(from: decoder))
-}
-
-private func resilientlyDecodeRawRepresentable<Value>(
-  from decoder: Decoder) throws -> Value
-  where Value: ResilientRawRepresentable
-{
-  if Value.isFrozen {
-    return try Value(from: decoder)
-  } else {
-    let rawValue = try Value.RawValue(from: decoder)
-    if let value = Value(rawValue: rawValue) {
-      return value
+private struct ResilientRawRepresentableContainer<Value: ResilientRawRepresentable>: Decodable {
+  let value: Value
+  init(from decoder: Decoder) throws {
+    if Value.isFrozen {
+      value = try Value(from: decoder)
     } else {
-      throw UnknownNovelValueError(novelValue: rawValue)
+      let rawValue = try Value.RawValue(from: decoder)
+      if let value = Value(rawValue: rawValue) {
+        self.value = value
+      } else {
+        throw UnknownNovelValueError(novelValue: rawValue)
+      }
     }
   }
 }

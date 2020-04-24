@@ -20,7 +20,7 @@ import Foundation
 extension KeyedDecodingContainer {
 
   /**
-   Decodes a `Resilient` array, omitting elements as errors are encountered. A missing key or `nil` value are treated as errors when using a non-optional array.
+   Decodes a `Resilient` array, omitting elements as errors are encountered.
    */
   public func decode<Element>(_ type: Resilient<[Element]>.Type, forKey key: Key) throws -> Resilient<[Element]>
     where
@@ -40,11 +40,18 @@ extension KeyedDecodingContainer {
 
 extension Decoder {
 
-  func resilientlyDecodeArray<Element: Decodable>() -> Resilient<[Element]> {
-    resilientlyDecodeArray(decodeElement: Element.init)
+  func resilientlyDecodeArray<Element: Decodable>() -> Resilient<[Element]>
+  {
+    resilientlyDecodeArray(of: Element.self, transform: { $0 })
   }
-  
-  func resilientlyDecodeArray<Element>(decodeElement: (Decoder) throws -> Element) -> Resilient<[Element]> {
+
+  /**
+   We can't just use `map` because the transform needs to happen _before_ we wrap the value in `Resilient` so that that the element type of `ArrayDecodingError` is correct.
+   */
+  func resilientlyDecodeArray<IntermediateElement: Decodable, Element>(
+    of intermediateElementType: IntermediateElement.Type,
+    transform: (IntermediateElement) -> Element) -> Resilient<[Element]>
+  {
     do {
       var container = try unkeyedContainer()
       var results: [Result<Element, Error>] = []
@@ -55,7 +62,7 @@ extension Decoder {
         /// It is very unlikely that an error will be thrown here, so it is fine that this would fail the entire array
         let elementDecoder = try container.superDecoder()
         do {
-          results.append(.success(try decodeElement(elementDecoder)))
+          results.append(.success(transform(try IntermediateElement(from: elementDecoder))))
         } catch {
           elementDecoder.resilientDecodingHandled(error)
           results.append(.failure(error))

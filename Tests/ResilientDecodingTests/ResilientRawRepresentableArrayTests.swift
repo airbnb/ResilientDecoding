@@ -34,6 +34,9 @@ final class ResilientRawRepresentableArrayTests: XCTestCase {
     #endif
   }
 
+  /**
+   - note: We keep the non-optional properties in the JSON so they do not report errors
+   */
   func testDecodesWhenMissingKeysWithoutErrors() throws {
     let mock = try decodeMock(ResilientRawRepresentableArrayWrapper.self, """
       {
@@ -49,6 +52,9 @@ final class ResilientRawRepresentableArrayTests: XCTestCase {
     #endif
   }
 
+  /**
+   - note: We keep the non-optional properties in the JSON so they do not report errors
+   */
   func testDecodesNullValuesWithoutErrors() throws {
     let mock = try decodeMock(ResilientRawRepresentableArrayWrapper.self, """
       {
@@ -106,7 +112,7 @@ final class ResilientRawRepresentableArrayTests: XCTestCase {
     XCTAssertEqual(mock.optionalResilientArrayOfFrozenType, [.existing])
 
     #if DEBUG
-    /// All properties provide errors for inspection, but only _frozen_ types report the error (hence "3" expected errors above)
+    /// All properties provide errors for inspection, but only _frozen_ types report the error (hence "6" expected errors above)
     XCTAssertEqual(mock.$resilientArray.errors.count, 1)
     XCTAssertEqual(mock.$optionalResilientArray.errors.count, 2)
     XCTAssertEqual(mock.$resilientArrayOfFrozenType.errors.count, 1)
