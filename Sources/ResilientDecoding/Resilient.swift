@@ -1,5 +1,5 @@
 // Created by George Leontiev on 3/24/20.
-// Copyright © 2020 Airbnb Inc. All rights reserved.
+// Copyright © 2020 Airbnb Inc.
 
 import Foundation
 
