@@ -106,7 +106,7 @@ extension Resilient.ProjectedValue {
   }
 
   /**
-   This subscript adds the `errors` and `results` property to `Resilient<[String: T]>` values using `dynamicMemberLookup`.
+   This subscript adds the `errors` and `results` property to `Resilient<[String: T]?>` values using `dynamicMemberLookup`.
    */
   public subscript<T, U>(
     dynamicMember keyPath: KeyPath<ResilientDecodingOutcome.DictionaryDecodingError<T>, U>) -> U

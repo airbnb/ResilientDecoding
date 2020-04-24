@@ -18,7 +18,7 @@ import Foundation
 extension KeyedDecodingContainer {
 
   /**
-   Decodes a `Resilient` dictionary, omitting elements as errors are encountered.
+   Decodes a `Resilient` dictionary, omitting values as errors are encountered.
    */
   public func decode<Value>(_ type: Resilient<[String: Value]>.Type, forKey key: Key) throws -> Resilient<[String: Value]>
   {
@@ -26,7 +26,7 @@ extension KeyedDecodingContainer {
   }
 
   /**
-   Decodes an optional `Resilient` dictionary. A missing key or `nil` value will silently set the property to `nil`.
+   Decodes an optional `Resilient` dictionary. If the field is missing or the value is `nil` the decoded property will also be `nil`.
    */
   public func decode<Value: Decodable>(_ type: Resilient<[String: Value]?>.Type, forKey key: Key) throws -> Resilient<[String: Value]?> {
     resilientlyDecode(valueForKey: key, fallback: nil) { $0.resilientlyDecodeDictionary().map { $0 } }
@@ -64,12 +64,12 @@ extension Decoder {
 // MARK: - Private
 
 /**
- We can't use `KeyedDecodingContainer` to decode a dictionary because it will use `keyDecodingStrategy` to map the keys, which dictionary values do not. Instead we pull out the element decoders using this wrapper type.
+ We can't use `KeyedDecodingContainer` to decode a dictionary because it will use `keyDecodingStrategy` to map the keys, which dictionary values do not.
  */
 private struct DecodingResultContainer<Success: Decodable>: Decodable {
   let result: Result<Success, Error>
   init(from decoder: Decoder) throws {
-    result =  Result {
+    result = Result {
        do {
          return try Success(from: decoder)
        } catch {
