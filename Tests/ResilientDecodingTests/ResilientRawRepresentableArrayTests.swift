@@ -34,6 +34,9 @@ final class ResilientRawRepresentableArrayTests: XCTestCase {
     #endif
   }
 
+  /**
+   - note: We keep the non-optional properties in the JSON so they do not report errors
+   */
   func testDecodesWhenMissingKeysWithoutErrors() throws {
     let mock = try decodeMock(ResilientRawRepresentableArrayWrapper.self, """
       {
@@ -49,6 +52,9 @@ final class ResilientRawRepresentableArrayTests: XCTestCase {
     #endif
   }
 
+  /**
+   - note: We keep the non-optional properties in the JSON so they do not report errors
+   */
   func testDecodesNullValuesWithoutErrors() throws {
     let mock = try decodeMock(ResilientRawRepresentableArrayWrapper.self, """
       {

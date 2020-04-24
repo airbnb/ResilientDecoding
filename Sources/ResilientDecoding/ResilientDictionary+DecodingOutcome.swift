@@ -23,7 +23,7 @@ extension Resilient {
       self.init(value, outcome: .decodedSuccessfully)
     } else {
       #if DEBUG
-      let error = ResilientDecodingOutcome.DictionaryDecodingError(topLevelError: nil, results: results)
+      let error = ResilientDecodingOutcome.DictionaryDecodingError(results: results)
       /// `DictionaryDecodingError` is not reported
       self.init(value, outcome: .recoveredFrom(error, wasReported: false))
       #else
@@ -61,27 +61,33 @@ extension ResilientDecodingOutcome {
     private var topLevelError: Error?
 
     /// `DictionaryDecodingError` should only be initialized in this file
-    fileprivate init(topLevelError: Error?, results: [String: Result<Value, Error>]) {
-      self.topLevelError = topLevelError
+    fileprivate init(results: [String: Result<Value, Error>]) {
+      self.topLevelError = nil
       self.results = results
+    }
+
+    /// `DictionaryDecodingError` should only be initialized in this file
+    fileprivate init(topLevelError: Error?) {
+      self.topLevelError = topLevelError
+      self.results = [:]
     }
   }
 
   /**
-   Creates an `DictionaryDecodingError` representation of this outcome.
+   Creates a `DictionaryDecodingError` representation of this outcome.
    */
   fileprivate func dictionaryDecodingError<T>() -> ResilientDecodingOutcome.DictionaryDecodingError<T> {
     typealias DictionaryDecodingError = ResilientDecodingOutcome.DictionaryDecodingError<T>
     switch self {
     case .decodedSuccessfully, .keyNotFound, .valueWasNil:
-      return .init(topLevelError: nil, results: [:])
+      return .init(results: [:])
     case let .recoveredFrom(error as DictionaryDecodingError, wasReported):
       /// `DictionaryDecodingError` should not be reported
       assert(!wasReported)
       return error
     case .recoveredFrom(let error, _):
       /// Unlike array, we chose not to provide the top level error in the dictionary since there isn't a good way to choose an appropriate key.
-      return .init(topLevelError: error, results: [:])
+      return .init(topLevelError: error)
     }
   }
 

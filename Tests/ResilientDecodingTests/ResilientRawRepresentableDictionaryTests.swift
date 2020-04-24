@@ -34,6 +34,9 @@ final class ResilientRawRepresentableDictionaryTests: XCTestCase {
     #endif
   }
 
+  /**
+   - note: We keep the non-optional properties in the JSON so they do not report errors
+   */
   func testDecodesWhenMissingKeysWithoutErrors() throws {
     let mock = try decodeMock(ResilientRawRepresentableDictionaryWrapper.self, """
       {
@@ -48,7 +51,10 @@ final class ResilientRawRepresentableDictionaryTests: XCTestCase {
     XCTAssertEqual(mock.$optionalResilientDictionaryOfFrozenType.errors.count, 0)
     #endif
   }
-
+  
+  /**
+   - note: We keep the non-optional properties in the JSON so they do not report errors
+   */
   func testDecodesNullValuesWithoutErrors() throws {
     let mock = try decodeMock(ResilientRawRepresentableDictionaryWrapper.self, """
       {

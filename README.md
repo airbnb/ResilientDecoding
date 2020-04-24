@@ -76,6 +76,8 @@ enum MyEnum: String, ResilientRawRepresentable {
 }
 ```
 
+**Note:** `Array`s and `Dictionary`s of `ResilientRawRepresentable`s _always_ omit elements instead of using the `decodingFallback`.
+
 #### `isFrozen`
 `isFrozen` controls whether new `RawValues` will report errors to `ResilientDecodingErrorReporter`. By default, `isFrozen` is `false`, which means that a `RawValue` for which `init(rawValue:)` returns `nil` will _not_ report an error. This is useful when you want older versions of your code to support new `enum` cases without reporting errors, for instance when evolving a backend API used by an iOS application. In this way, the property is analogous to Swift's `@frozen` attribute, though they achieve different goals. `isFrozen` has no effect on property-level errors.
 
