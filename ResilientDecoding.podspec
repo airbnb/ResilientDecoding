@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name     = 'ResilientDecoding'
-  s.version  = '0.9.1'
+  s.version  = '1.0.0'
   s.license  = 'MIT'
   s.summary  = 'A cache that enables the performant persistence of individual messages to disk'
   s.homepage = 'https://github.com/airbnb/ResilientDecoding'
