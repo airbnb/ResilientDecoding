@@ -33,7 +33,7 @@ After running this code, `foo` will be a `Foo` where `foo.array == [1, 3]` and `
 In your Package.swift:
 ```swift
   dependencies: [
-    .package(name: "ResilientDecoding", url: "https://github.com/airbnb/ResilientDecoding.git", from: "0.9.0"),
+    .package(name: "ResilientDecoding", url: "https://github.com/airbnb/ResilientDecoding.git", from: "1.0.0"),
   ]
 ```
 
@@ -43,7 +43,7 @@ In your `Podfile`:
 
 ```
 platform :ios, '12.0'
-pod 'ResilientDecoding', '~> 0.9'
+pod 'ResilientDecoding', '~> 1.0'
 ```
 
 ## Decoding
