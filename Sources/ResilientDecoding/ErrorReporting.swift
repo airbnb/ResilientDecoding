@@ -5,6 +5,12 @@ import Foundation
 
 // MARK: - Enabling Error Reporting
 
+extension CodingUserInfoKey {
+
+  public static let resilientDecodingErrorReporter = CodingUserInfoKey(rawValue: "ResilientDecodingErrorReporter")!
+
+}
+
 extension Dictionary where Key == CodingUserInfoKey, Value == Any {
 
   /**
@@ -12,14 +18,23 @@ extension Dictionary where Key == CodingUserInfoKey, Value == Any {
    - note: May only be called once on a particular `userInfo` dictionary
    */
   public mutating func enableResilientDecodingErrorReporting() -> ResilientDecodingErrorReporter {
-    if let existingValue = self[resilientDecodingErrorReporterCodingUserInfoKey] {
+    let errorReporter = ResilientDecodingErrorReporter()
+    _ = replaceResilientDecodingErrorReporter(with: errorReporter)
+    return errorReporter
+  }
+
+  /**
+   Replaces the existing error reporter with the provided one
+   - returns: The previous value of the `resilientDecodingErrorReporter` key, which can be used to restore this dictionary to its original state.
+   */
+  fileprivate mutating func replaceResilientDecodingErrorReporter(with errorReporter: ResilientDecodingErrorReporter) -> Any? {
+    if let existingValue = self[.resilientDecodingErrorReporter] {
       assertionFailure()
       if let existingReporter = existingValue as? ResilientDecodingErrorReporter {
         existingReporter.currentDigest.mayBeMissingReportedErrors = true
       }
     }
-    let errorReporter = ResilientDecodingErrorReporter()
-    self[resilientDecodingErrorReporterCodingUserInfoKey] = errorReporter
+    self[.resilientDecodingErrorReporter] = errorReporter
     return errorReporter
   }
 
@@ -35,26 +50,15 @@ extension JSONDecoder {
     userInfo.enableResilientDecodingErrorReporting()
   }
 
-}
-
-extension Decoder {
-
-  /**
-   This method should be called whenever an error is handled by the `Resilient` infrastructure.
-   Care should be taken that this is called on the most relevant `Decoder` object, since this method uses the `Decoder`'s `codingPath` to place the error in the correct location in the tree.
-   */
-  func resilientDecodingHandled(_ error: Swift.Error) {
-    guard let errorReporterAny = userInfo[resilientDecodingErrorReporterCodingUserInfoKey] else {
-      return
+  public func decode<T: Decodable>(_ type: T.Type, from data: Data, reportResilientDecodingErrors: Bool) throws -> (T, ErrorDigest?) {
+    guard reportResilientDecodingErrors else {
+      return (try decode(T.self, from: data), nil)
     }
-    /**
-     Check that we haven't hit the very unlikely case where someone has overriden our user info key with something we do not expect.
-     */
-    guard let errorReporter = errorReporterAny as? ResilientDecodingErrorReporter else {
-      assertionFailure()
-      return
-    }
-    errorReporter.resilientDecodingHandled(error, at: codingPath.map { $0.stringValue })
+    let errorReporter = ResilientDecodingErrorReporter()
+    let oldValue = userInfo.replaceResilientDecodingErrorReporter(with: errorReporter)
+    let value = try decode(T.self, from: data)
+    userInfo[.resilientDecodingErrorReporter] = oldValue
+    return (value, errorReporter.flushReportedErrors())
   }
 
 }
@@ -62,6 +66,11 @@ extension Decoder {
 // MARK: - Accessing Reported Errors
 
 public final class ResilientDecodingErrorReporter {
+
+  /**
+   Creates a `ResilientDecodingErrorReporter`, which is only useful if it is the value for the key `resilientDecodingErrorReporter` in a `Decoder`'s `userInfo`
+   */
+  public init() { }
 
   /**
    This is meant to be called immediately after decoding a `Decodable` type from a `Decoder`.
@@ -132,6 +141,30 @@ public struct ErrorDigest {
 
 }
 
+// MARK: - Reporting Errors
+
+extension Decoder {
+
+  /**
+   This method should be called whenever an error is handled by the `Resilient` infrastructure.
+   Care should be taken that this is called on the most relevant `Decoder` object, since this method uses the `Decoder`'s `codingPath` to place the error in the correct location in the tree.
+   */
+  func resilientDecodingHandled(_ error: Swift.Error) {
+    guard let errorReporterAny = userInfo[.resilientDecodingErrorReporter] else {
+      return
+    }
+    /**
+     Check that we haven't hit the very unlikely case where someone has overriden our user info key with something we do not expect.
+     */
+    guard let errorReporter = errorReporterAny as? ResilientDecodingErrorReporter else {
+      assertionFailure()
+      return
+    }
+    errorReporter.resilientDecodingHandled(error, at: codingPath.map { $0.stringValue })
+  }
+
+}
+
 // MARK: - Pretty Printing
 
 #if DEBUG
@@ -186,7 +219,7 @@ private extension Error {
 
 #endif
 
-// MARK: - Private
+// MARK: - Specific Errors
 
 /**
  In the unlikely event that `enableResilientDecodingErrorReporting()` is called multiple times, this error will be reported to the earlier `ResilientDecodingErrorReporter` to signify that the later one may have eaten some of its errors.
@@ -212,5 +245,3 @@ public struct UnknownNovelValueError: Error {
   }
 
 }
-
-private let resilientDecodingErrorReporterCodingUserInfoKey = CodingUserInfoKey(rawValue: "ResilientDecodingErrorReporter")!

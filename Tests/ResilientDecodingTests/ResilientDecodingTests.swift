@@ -32,12 +32,9 @@ extension XCTestCase {
 
   func decodeMock<T: Decodable>(_ type: T.Type, _ string: String, expectedErrorCount: Int = 0) throws -> T {
     let decoder = JSONDecoder()
-    let errorReporter = decoder.enableResilientDecodingErrorReporting()
-    let decoded = try decoder.decode(T.self, from: string.data(using: .utf8)!)
-    let errorDigest = errorReporter.flushReportedErrors()
+    let data = string.data(using: .utf8)!
+    let (decoded, errorDigest) = try decoder.decode(T.self, from: data, reportResilientDecodingErrors: true)
     XCTAssertEqual(errorDigest?.errors.count ?? 0, expectedErrorCount)
-    // Ensure that errors were actually flushed
-    XCTAssertNil(errorReporter.flushReportedErrors())
     return decoded
   }
 

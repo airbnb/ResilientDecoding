@@ -20,8 +20,12 @@ final class ResilientDecodingErrorReporterTests: XCTestCase {
         "resilientEnum": "novel",
       }
       """.data(using: .utf8)!)
+    guard let errorDigest = errorReporter.flushReportedErrors() else {
+      XCTFail()
+      return
+    }
     #if DEBUG
-    XCTAssertEqual(errorReporter.flushReportedErrors()?.debugDescription, """
+    XCTAssertEqual(errorDigest.debugDescription, """
       resilientArray
         Index 1
           - Could not decode as `Int`
@@ -31,6 +35,8 @@ final class ResilientDecodingErrorReporterTests: XCTestCase {
         - Unknown novel value "novel" (this error is not reported by default)
       """)
     #endif
+    // Ensure that the error digest was actually flushed
+    XCTAssertNil(errorReporter.flushReportedErrors())
   }
 
 }
