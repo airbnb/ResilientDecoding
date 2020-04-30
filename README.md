@@ -93,9 +93,20 @@ Scalar types, such as `Optional` and `ResilientRawRepresentable`, also provide a
 
 ### `ResilientDecodingErrorReporter`
 
-In production, `ResilientDecodingErrorReporter` can be used to collate all errors encountered when decoding a type with `Resilient` properties. This API involves modifying the `userInfo` dictionary of your `Decoder` using the mutating function `enableResilientDecodingErrorReporting()` which returns a `ResilientDecodingErrorReporter` type. After decoding a type (for instance, using `JSONDecoder.decode(_:from:)`), calling `flushReportedErrors()` on the error reporter will return any errors encountered during decoding. Errors are buffered, so decoding two types before calling `flushReportedErrors()` will return errors which occured during either decoding. Likewise, you can decode a new type using the same decoder after calling `flushReportedErrors()` and then call it again to get only the errors that occurred during the last decoding.
+In production, `ResilientDecodingErrorReporter` can be used to collate all errors encountered when decoding a type with `Resilient` properties. `JSONDecoder` provides a convenient `decode(_:from:reportResilientDecodingErrors:)` API which returns both the decoded value and the error digest if errors were encountered. More complex use cases require adding a `ResilientDecodingErrorReporter` to your `Decoder`'s `userInfo` as the value for the `.resilientDecodingErrorReporter` user info key. After decoding a type, you can call `flushReportedErrors` which will return an `ErrorDigest` if any errors are encountered. The digest can be used to access the underlying errors (`errorDigest.errors`) or be pretty-printed in `DEBUG` (`debugPrint(errorDigest)`). 
 
-**Note:** One difference the errors available on the property wrapper and those reported to the `ResilientDecodingErrorReporter`, is the latter _does not_ report `UnknownNovelValueError`s by default (`UnknownNovelValueError` is thrown when a non-frozen `ResilientRawRepresentable`'s `init(rawValue:)` returns `nil`). You can alter this behavior by calling passing `includeUnknownNovelValueErrors: true` as an argument to `flushReportedErrors()`. 
+The pretty-printed digest looks something like this:
+```
+resilientArrayProperty
+  Index 1
+    - Could not decode as `Int`
+  Index 3
+    - Could not decode as `Int`
+resilientRawRepresentableProperty
+  - Unknown novel value "novel" (this error is not reported by default)
+```
+
+**Note:** One difference the errors available on the property wrapper and those reported to the `ResilientDecodingErrorReporter`, is the latter _does not_ report `UnknownNovelValueError`s by default (`UnknownNovelValueError` is thrown when a non-frozen `ResilientRawRepresentable`'s `init(rawValue:)` returns `nil`). You can alter this behavior by calling `errors(includeUnknownNovelValueErrors: true)` on the error digest. 
 
 ## More Details
 
