@@ -1,8 +1,8 @@
 Pod::Spec.new do |s|
   s.name     = 'ResilientDecoding'
-  s.version  = '1.0.0'
+  s.version  = '1.0.1'
   s.license  = 'MIT'
-  s.summary  = 'A cache that enables the performant persistence of individual messages to disk'
+  s.summary  = 'A library you can use to partially recover from decoding errors'
   s.homepage = 'https://github.com/airbnb/ResilientDecoding'
   s.authors  = 'George Leontiev'
   s.source   = { :git => 'https://github.com/airbnb/ResilientDecoding.git', :tag => s.version }
