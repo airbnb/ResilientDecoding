@@ -24,7 +24,7 @@ let foo = try JSONDecoder().decode(Foo.self, from: """
   }
   """.data(using: .utf8)!)
 ```
-After running this code, `foo` will be a `Foo` where `foo.array == [1, 3]` and `foo.value == nil`. Additionally, `foo.$array.results` will be `[.success(1), .failure(DecodingError.dataCorrupted(…), .success(3)]` and `foo.$value.error` will be `DecodingError.dataCorrupted(…)`.
+After running this code, `foo` will be a `Foo` where `foo.array == [1, 3]` and `foo.value == nil`. In DEBUG, `foo.$array.results` will be `[.success(1), .failure(DecodingError.dataCorrupted(…), .success(3)]` and `foo.$value.error` will be `DecodingError.dataCorrupted(…)`. This functionality is `DEBUG`-only so that we can maintain [no overhead in release builds](https://github.com/airbnb/ResilientDecoding/blob/8fac9a34b7cff8c8849081dee2630b8958f695cc/Tests/ResilientDecodingTests/MemoryTests.swift#L8-L20).
 
 ## Setup
 
