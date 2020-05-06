@@ -43,10 +43,12 @@ final class BugTests: XCTestCase {
     XCTAssertEqual(mock.dictionary.count, 2)
     XCTAssertNotNil(mock.rawRepresentable)
     XCTAssertNotNil(mock.frozenRawRepresentable)
+    #if DEBUG
     XCTAssertNil(mock.$optional.error)
     XCTAssertNil(mock.$array.error)
     XCTAssertNil(mock.$dictionary.error)
     XCTAssertNil(mock.$rawRepresentable.error)
     XCTAssertNil(mock.$frozenRawRepresentable.error)
+    #endif
   }
 }
