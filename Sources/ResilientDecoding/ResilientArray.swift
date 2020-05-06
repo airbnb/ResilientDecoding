@@ -62,7 +62,7 @@ extension Decoder {
         /// It is very unlikely that an error will be thrown here, so it is fine that this would fail the entire array
         let elementDecoder = try container.superDecoder()
         do {
-          results.append(.success(transform(try IntermediateElement(from: elementDecoder))))
+          results.append(.success(transform(try elementDecoder.singleValueContainer().decode(IntermediateElement.self))))
         } catch {
           elementDecoder.resilientDecodingHandled(error)
           results.append(.failure(error))
