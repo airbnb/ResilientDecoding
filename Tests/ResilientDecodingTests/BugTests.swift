@@ -8,7 +8,11 @@ import ResilientDecoding
  Tests for bugs that were encountered after releasing. The commit which introduces a test here should also introduce a fix.
  */
 final class BugTests: XCTestCase {
-  func testURLs() throws {
+
+  /**
+   This issue was causing this test to fail previously: https://forums.swift.org/t/url-fails-to-decode-when-it-is-a-generic-argument-and-genericargument-from-decoder-is-used/36238
+   */
+  func testResilientURLsDecodeSuccessfully() throws {
     struct RawRepresentable: ResilientRawRepresentable {
       let rawValue: URL
     }
