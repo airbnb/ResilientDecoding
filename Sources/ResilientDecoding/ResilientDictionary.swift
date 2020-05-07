@@ -71,7 +71,7 @@ private struct DecodingResultContainer<Success: Decodable>: Decodable {
   init(from decoder: Decoder) throws {
     result = Result {
       do {
-        return try Success(from: decoder)
+        return try decoder.singleValueContainer().decode(Success.self)
       } catch {
         decoder.resilientDecodingHandled(error)
         throw error

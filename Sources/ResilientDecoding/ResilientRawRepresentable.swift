@@ -196,12 +196,18 @@ extension KeyedDecodingContainer {
 private struct ResilientRawRepresentableContainer<Value: ResilientRawRepresentable>: Decodable {
   let value: Value
   init(from decoder: Decoder) throws {
-    if Value.isFrozen {
-      value = try Value(from: decoder)
+    let rawValue = try decoder.singleValueContainer().decode(Value.RawValue.self)
+    if let value = Value(rawValue: rawValue) {
+      self.value = value
     } else {
-      let rawValue = try Value.RawValue(from: decoder)
-      if let value = Value(rawValue: rawValue) {
-        self.value = value
+      if Value.isFrozen {
+        /**
+         Ideally, we would just call `try Value(from: decoder)` at the top of this function if `Value.isFrozen` and use the error thrown by `Foundation`. Unfortunately, this fails when decoding a type whose `RawValue` is backed by primitive type (like how `URL` is backed by `String`). The URL test in `BugTests` demonstrates this behavior. I believe it is related to this issue: https://forums.swift.org/t/url-fails-to-decode-when-it-is-a-generic-argument-and-genericargument-from-decoder-is-used/36238
+         */
+        let context = DecodingError.Context(
+          codingPath: decoder.codingPath,
+          debugDescription: "Cannot initialize \(Value.self) from invalid raw value \(rawValue)")
+        throw DecodingError.dataCorrupted(context)
       } else {
         throw UnknownNovelValueError(novelValue: rawValue)
       }

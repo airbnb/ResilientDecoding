@@ -14,7 +14,7 @@ public struct Resilient<Value: Decodable>: Decodable {
    */
   public init(from decoder: Decoder) throws {
     assertionFailure()
-    let value = try Value(from: decoder)
+    let value = try decoder.singleValueContainer().decode(Value.self)
     self = Self(value, outcome: .decodedSuccessfully)
   }
 
