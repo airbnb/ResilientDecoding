@@ -8,8 +8,8 @@ Pod::Spec.new do |s|
   s.source   = { :git => 'https://github.com/airbnb/ResilientDecoding.git', :tag => s.version }
   s.swift_version = '5.2'
   s.source_files = 'Sources/ResilientDecoding/**/*.{swift}'
-  s.ios.deployment_target = '12.0'
-  s.tvos.deployment_target = '12.0'
+  s.ios.deployment_target = '11.0'
+  s.tvos.deployment_target = '11.0'
   s.watchos.deployment_target = '5.0'
   s.macos.deployment_target = '10.14'
 end
