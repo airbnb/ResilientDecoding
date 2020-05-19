@@ -108,6 +108,12 @@ resilientRawRepresentableProperty
 
 **Note:** One difference the errors available on the property wrapper and those reported to the `ResilientDecodingErrorReporter`, is the latter _does not_ report `UnknownNovelValueError`s by default (`UnknownNovelValueError` is thrown when a non-frozen `ResilientRawRepresentable`'s `init(rawValue:)` returns `nil`). You can alter this behavior by calling `errors(includeUnknownNovelValueErrors: true)` on the error digest. 
 
+## Frequently Asked Questions
+
+### Will `Resilient` work as expected when the wrapped type is a generic argument?
+
+No. If you have a type that is generic over `<T>` and specify `@Resilient var someResilient: T`  it will not matter if `T` is an array or dictionary, it will be treated as a single value.
+
 ## More Details
 
 For more information about what how exactly a particular `Resilient` field will behave when it encounters a particular error, I recommend consulting the unit tests.
