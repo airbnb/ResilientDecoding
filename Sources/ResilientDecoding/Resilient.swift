@@ -137,7 +137,7 @@ extension KeyedDecodingContainer {
         }
         return try body(decoder)
       } catch {
-        decoder.resilientDecodingHandled(error)
+        decoder.reportError(error)
         return Resilient(fallback(), outcome: .recoveredFrom(error, wasReported: true))
       }
     } catch {
