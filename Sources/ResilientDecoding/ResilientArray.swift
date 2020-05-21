@@ -64,13 +64,13 @@ extension Decoder {
         do {
           results.append(.success(transform(try elementDecoder.singleValueContainer().decode(IntermediateElement.self))))
         } catch {
-          elementDecoder.resilientDecodingHandled(error)
+          elementDecoder.reportError(error)
           results.append(.failure(error))
         }
       }
       return Resilient(results)
     } catch {
-      resilientDecodingHandled(error)
+      reportError(error)
       return Resilient([], outcome: .recoveredFrom(error, wasReported: true))
     }
   }

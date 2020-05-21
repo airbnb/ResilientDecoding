@@ -104,7 +104,7 @@ extension KeyedDecodingContainer {
         do {
           return Resilient(try ResilientRawRepresentableContainer(from: decoder).value).map { $0 }
         } catch {
-          decoder.resilientDecodingHandled(error)
+          decoder.reportError(error)
           return Resilient(T.decodingFallback, outcome: .recoveredFrom(error, wasReported: true))
         }
       })

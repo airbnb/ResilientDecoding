@@ -146,10 +146,9 @@ public struct ErrorDigest {
 extension Decoder {
 
   /**
-   This method should be called whenever an error is handled by the `Resilient` infrastructure.
-   Care should be taken that this is called on the most relevant `Decoder` object, since this method uses the `Decoder`'s `codingPath` to place the error in the correct location in the tree.
+   Reports an error which did not cause decoding to fail. This error can be accessed after decoding is complete using `ResilientDecodingErrorReporter`. Care should be taken that this is called on the most relevant `Decoder` object, since this method uses the `Decoder`'s `codingPath` to place the error in the correct location in the tree.
    */
-  func resilientDecodingHandled(_ error: Swift.Error) {
+  public func reportError(_ error: Swift.Error) {
     guard let errorReporterAny = userInfo[.resilientDecodingErrorReporter] else {
       return
     }

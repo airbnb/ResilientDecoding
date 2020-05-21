@@ -54,7 +54,7 @@ extension Decoder {
         .mapValues { $0.result.map(transform) }
       return Resilient(value)
     } catch {
-      resilientDecodingHandled(error)
+      reportError(error)
       return Resilient([:], outcome: .recoveredFrom(error, wasReported: true))
     }
   }
@@ -73,7 +73,7 @@ private struct DecodingResultContainer<Success: Decodable>: Decodable {
       do {
         return try decoder.singleValueContainer().decode(Success.self)
       } catch {
-        decoder.resilientDecodingHandled(error)
+        decoder.reportError(error)
         throw error
       }
     }
