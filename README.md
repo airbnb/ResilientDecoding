@@ -114,6 +114,14 @@ resilientRawRepresentableProperty
 
 No. If you have a type that is generic over `<T>` and specify `@Resilient var someResilient: T`  it will not matter if `T` is an array or dictionary, it will be treated as a single value.
 
+### Why doesn't Resilient conform to `Hashable` or `Equatable` when its value does?
+
+We believe that different consumers may have different understandings of what equality means for a `Resilient` type in the presence of errors. For instance, are two resilient properties equal if one recovered an error and the other decoded successfully? Depending on the use case, consumers may want to define equality differently and since it is fairly simple to define `Resilient` equality in an extension, we prefer to leave it to the consumer to decide.
+
+### Why doesn't Resilient conform to `Encodable` when its value does?
+
+We don't explicitly conform `Resilient` to `Encodable` because the encoding may be lossy in the presence of errors. If you are sure that this isn't an issue for your use case, it should be simple to provide an `Encodable` conformance in your own module.
+
 ## More Details
 
 For more information about what how exactly a particular `Resilient` field will behave when it encounters a particular error, I recommend consulting the unit tests.
