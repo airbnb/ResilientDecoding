@@ -8,11 +8,17 @@ jobs:
     steps:
     # Checks-out the repo. More at: https://github.com/actions/checkout
     - uses: actions/checkout@v2
-    - name: Select Xcode version
+    - name: Run on Xcode 11.4
       run: sudo xcode-select -switch /Applications/Xcode_11.4.app
     - name: Generate linux tests
       # Makes sure the linux tests were generated properly (can only be run on macOS)
       run: swift test --generate-linuxmain && git update-index --refresh && git diff-index --quiet HEAD --
+    - name: Test in Debug
+      run: swift test -c debug
+    - name: Test in Release
+      run: swift test -c release
+    - name: Run on Xcode 12.0
+      run: sudo xcode-select -switch /Applications/Xcode_12.app
     - name: Test in Debug
       run: swift test -c debug
     - name: Test in Release
