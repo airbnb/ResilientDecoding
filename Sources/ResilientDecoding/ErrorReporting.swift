@@ -134,9 +134,13 @@ public struct ErrorDigest {
     }
 
     var errors: [Error] {
-      shallowErrors + children.flatMap { $0.value.errors }
+      shallowErrors
+        + children
+        .sorted { $0.key < $1.key }
+        .flatMap { $0.value.errors }
     }
   }
+
   fileprivate var root = Node()
 
 }
