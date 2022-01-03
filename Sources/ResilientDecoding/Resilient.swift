@@ -25,7 +25,7 @@ public struct Resilient<Value: Decodable>: Decodable {
     self.wrappedValue = value
     self.outcome = .decodedSuccessfully
   }
-    
+
   init(_ value: Value, outcome: ResilientDecodingOutcome) {
     self.wrappedValue = value
     self.outcome = outcome
@@ -47,69 +47,104 @@ public struct Resilient<Value: Decodable>: Decodable {
   func map<T>(transform: (Value) -> T) -> Resilient<T> {
     Resilient<T>(transform(wrappedValue), outcome: outcome)
   }
-  
+
   #if DEBUG
-  /**
+    /**
    `subscript(dynamicMember:)` is defined in files like `ResilientArray+DecodingOutcome`, and is used to provide certain properties only on `@Resilient` properties of certain types. For instance `errors` and `results` are only present on resilient arrays. The reason we need to use `@dynamicMemberLookup` is so that we can add a generic constraint (which we can to `subscript`, but not to properties).
    `@dynamicMemberLookup` also cannot be declared on an extension, so must be declared here.
    */
-  @dynamicMemberLookup
-  public struct ProjectedValue {
-    public let outcome: ResilientDecodingOutcome
-    
-    public var error: Error? {
-      switch outcome {
-      case .decodedSuccessfully, .keyNotFound, .valueWasNil:
-        return nil
-      case .recoveredFrom(let error, _):
-        return error
+    @dynamicMemberLookup
+    public struct ProjectedValue {
+      public let outcome: ResilientDecodingOutcome
+
+      public var error: Error? {
+        switch outcome {
+        case .decodedSuccessfully, .keyNotFound, .valueWasNil:
+          return nil
+        case .recoveredFrom(let error, _):
+          return error
+        }
       }
     }
-  }
-  public var projectedValue: ProjectedValue { ProjectedValue(outcome: outcome) }
+    public var projectedValue: ProjectedValue { ProjectedValue(outcome: outcome) }
   #endif
-  
+
 }
+
+extension Resilient: Equatable where Value: Equatable {}
+extension Resilient: Hashable where Value: Hashable {}
 
 // MARK: - Decoding Outcome
 
 #if DEBUG
-/**
- The outcome of decoding a `Resilient` type
- */
-public enum ResilientDecodingOutcome {
-  /**
+  /// The outcome of decoding a `Resilient` type
+  public enum ResilientDecodingOutcome: Hashable {
+    /**
    A value was decoded successfully
    */
-  case decodedSuccessfully
-  
-  /**
+    case decodedSuccessfully
+
+    /**
    The key was missing, and it was not treated as an error (for instance when decoding an `Optional`)
    */
-  case keyNotFound
-  
-  /**
+    case keyNotFound
+
+    /**
    The value was `nil`, and it was not treated as an error (for instance when decoding an `Optional`)
    */
-  case valueWasNil
-  
-  /**
+    case valueWasNil
+
+    /**
    An error was recovered from during decoding
    - parameter `wasReported`: Some errors are not reported, for instance `ArrayDecodingError`
    */
-  case recoveredFrom(Error, wasReported: Bool)
-}
+    case recoveredFrom(Error, wasReported: Bool)
+
+    public static func == (lhs: ResilientDecodingOutcome, rhs: ResilientDecodingOutcome) -> Bool {
+      switch (lhs, rhs) {
+      case (.decodedSuccessfully, .decodedSuccessfully): return true
+      case (.keyNotFound, .keyNotFound): return true
+      case (.valueWasNil, .valueWasNil): return true
+      case let (.recoveredFrom(lhsError, lhsWasReported), .recoveredFrom(rhsError, rhsWasReported)):
+        return (lhsError as NSError) == (rhsError as NSError)
+          && lhsWasReported == rhsWasReported
+      default:
+        return false
+      }
+    }
+
+    public func hash(into hasher: inout Hasher) {
+      enum HashTag: Int {
+        case decodedSuccessfully
+        case keyNotFound
+        case valueWasNil
+        case recoveredFrom
+      }
+
+      switch self {
+      case .decodedSuccessfully:
+        hasher.combine(HashTag.decodedSuccessfully)
+      case .keyNotFound:
+        hasher.combine(HashTag.keyNotFound)
+      case .valueWasNil:
+        hasher.combine(HashTag.valueWasNil)
+      case .recoveredFrom(let error, let wasReported):
+        hasher.combine(HashTag.recoveredFrom)
+        let nsError = error as NSError
+        hasher.combine(nsError)
+        hasher.combine(wasReported)
+      }
+    }
+  }
 #else
-/**
- In release, we don't want the decoding outcome mechanism taking up space, so we define an empty struct with `static` properties and functions which match the `enum` above. This reduces the number of places we need to use `#if DEBUG` substantially.
- */
-struct ResilientDecodingOutcome {
-  static let decodedSuccessfully = Self()
-  static let keyNotFound = Self()
-  static let valueWasNil = Self()
-  static let recoveredFromDebugOnlyError = Self()
-  static func recoveredFrom(_: Error, wasReported: Bool) -> Self { Self() }
-}
+  /// In release, we don't want the decoding outcome mechanism taking up space, so we define an empty struct with `static` properties and functions which match the `enum` above. This reduces the number of places we need to use `#if DEBUG` substantially.
+  struct ResilientDecodingOutcome: Hashable {
+    static let decodedSuccessfully = Self()
+    static let keyNotFound = Self()
+    static let valueWasNil = Self()
+    static let recoveredFromDebugOnlyError = Self()
+    static func recoveredFrom(_: Error, wasReported: Bool) -> Self { Self() }
+  }
 #endif
 
 // MARK: - Convenience
@@ -124,8 +159,8 @@ extension KeyedDecodingContainer {
     valueForKey key: Key,
     fallback: @autoclosure () -> T,
     behaveLikeOptional: Bool = true,
-    body: (Decoder) throws -> Resilient<T> = { Resilient(try T(from: $0)) }) -> Resilient<T>
-  {
+    body: (Decoder) throws -> Resilient<T> = { Resilient(try T(from: $0)) }
+  ) -> Resilient<T> {
     if behaveLikeOptional, !contains(key) {
       return Resilient(fallback(), outcome: .keyNotFound)
     }
