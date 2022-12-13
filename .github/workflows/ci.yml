@@ -39,7 +39,7 @@ jobs:
         swift-action: 'test'
 
   validate-podspec:
-    runs-on: macos-latest
+    runs-on: macOS-11
     steps:
     - uses: actions/checkout@v2
     - name: Validate Podspec
