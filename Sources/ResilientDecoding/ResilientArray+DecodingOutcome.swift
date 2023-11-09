@@ -5,18 +5,18 @@ import Foundation
 
 extension Resilient {
   
-  init<T>(_ results: [Result<T, Error>]) where Value == [T] {
+  init<T: Sendable>(_ results: [Result<T, Error>]) where Value == [T] {
     self.init(results, transform: { $0 })
   }
   
-  init<T>(_ results: [Result<T, Error>]) where Value == [T]? {
+  init<T: Sendable>(_ results: [Result<T, Error>]) where Value == [T]? {
     self.init(results, transform: { $0 })
   }
 
   /**
    - parameter transform: While the two lines above both say `{ $0 }` they are actually different because the first one is of type `([T]) -> [T]` and the second is of type `([T]) -> [T]?`.
    */
-  private init<T>(_ results: [Result<T, Error>], transform: ([T]) -> Value) {
+  private init<T: Sendable>(_ results: [Result<T, Error>], transform: ([T]) -> Value) {
     let elements = results.compactMap { try? $0.get() }
     let value = transform(elements)
     if elements.count == results.count {
@@ -41,7 +41,7 @@ extension ResilientDecodingOutcome {
   /**
    A type representing some number of errors encountered while decoding an array
    */
-  public struct ArrayDecodingError<Element>: Error {
+  public struct ArrayDecodingError<Element: Sendable>: Error {
     public let results: [Result<Element, Error>]
     public var errors: [Error] {
       results.compactMap { result in
