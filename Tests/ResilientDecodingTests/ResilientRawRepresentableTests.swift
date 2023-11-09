@@ -4,7 +4,7 @@
 import XCTest
 import ResilientDecoding
 
-private struct ResilientRawRepresentableEnumWrapper: Decodable {
+private struct ResilientRawRepresentableEnumWrapper: Decodable, Sendable {
   @Resilient var resilientEnumWithFallback: ResilientEnumWithFallback
   @Resilient var resilientFrozenEnumWithFallback: ResilientFrozenEnumWithFallback
   @Resilient var optionalResilientEnum: ResilientEnum?
