@@ -17,15 +17,15 @@ let package = Package(
   targets: [
     .target(
       name: "ResilientDecoding",
-      dependencies: []),
+      dependencies: [],
+      swiftSettings: [
+        .enableExperimentalFeature("StrictConcurrency"),
+      ]),
     .testTarget(
       name: "ResilientDecodingTests",
-      dependencies: ["ResilientDecoding"]),
+      dependencies: ["ResilientDecoding"],
+      swiftSettings: [
+        .enableExperimentalFeature("StrictConcurrency"),
+      ]),
   ]
 )
-
-for target in package.targets {
-  var settings = target.swiftSettings ?? []
-  settings.append(.enableExperimentalFeature("StrictConcurrency"))
-  target.swiftSettings = settings
-}
