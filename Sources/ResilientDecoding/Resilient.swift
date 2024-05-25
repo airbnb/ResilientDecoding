@@ -6,7 +6,7 @@ import Foundation
 // MARK: - Resilient
 
 @propertyWrapper
-public struct Resilient<Value: Decodable>: Decodable {
+public struct Resilient<Value: Decodable & Sendable>: Decodable, Sendable {
 
   /**
    If this initializer is called it is likely because a property was marked as `Resilient` despite the underlying type not supporting resilient decoding. For instance, a developer may write `@Resilient var numberOfThings: Int`, but since `Int` doesn't provide a mechanism for recovering from a decoding failure (like `Array`s and `Optional`s do) wrapping the property in `Resilient` does nothing.
@@ -77,7 +77,7 @@ public struct Resilient<Value: Decodable>: Decodable {
 /**
  The outcome of decoding a `Resilient` type
  */
-public enum ResilientDecodingOutcome {
+public enum ResilientDecodingOutcome: Sendable {
   /**
    A value was decoded successfully
    */
