@@ -4,27 +4,12 @@ on: [push, pull_request]
 
 jobs:
   build-macos:
-    runs-on: macOS-11
+    runs-on: macOS-14
     steps:
     # Checks-out the repo. More at: https://github.com/actions/checkout
     - uses: actions/checkout@v2
-    - name: Run on Xcode 11
-      run: sudo xcode-select -switch /Applications/Xcode_11.7.app
-    - name: Generate linux tests
-      # Makes sure the linux tests were generated properly (can only be run on macOS)
-      run: swift test --generate-linuxmain && git update-index --refresh && git diff-index --quiet HEAD --
-    - name: Test in Debug
-      run: swift test -c debug
-    - name: Test in Release
-      run: swift test -c release
-  
-  build-macos-xcode-12:
-    runs-on: macOS-11
-    steps:
-    # Checks-out the repo. More at: https://github.com/actions/checkout
-    - uses: actions/checkout@v2
-    - name: Run on Xcode 12
-      run: sudo xcode-select -switch /Applications/Xcode_12.4.app
+    - name: Run on Xcode 15.4
+      run: sudo xcode-select -switch /Applications/Xcode_15.4.app
     - name: Test in Debug
       run: swift test -c debug
     - name: Test in Release
@@ -39,7 +24,7 @@ jobs:
         swift-action: 'test'
 
   validate-podspec:
-    runs-on: macOS-11
+    runs-on: macOS-14
     steps:
     - uses: actions/checkout@v2
     - name: Validate Podspec
