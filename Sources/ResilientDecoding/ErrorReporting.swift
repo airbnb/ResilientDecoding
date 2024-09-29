@@ -234,12 +234,12 @@ public struct UnknownNovelValueError: Error {
   /**
    The raw value for which `init(rawValue:)` returned `nil`.
    */
-  public let novelValue: Any
+  public let novelValue: Sendable
 
   /**
    - parameter novelValue: A value which is believed to be valid but the code does not know how to handle.
    */
-  public init<T>(novelValue: T) {
+  public init<T: Sendable>(novelValue: T) {
     self.novelValue = novelValue
   }
 

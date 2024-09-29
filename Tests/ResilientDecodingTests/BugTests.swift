@@ -20,7 +20,7 @@ final class BugTests: XCTestCase {
       let rawValue: URL
       static var isFrozen: Bool { true }
     }
-    struct Mock: Decodable {
+    struct Mock: Decodable, Sendable {
       @Resilient var optional: URL?
       @Resilient var array: [URL]
       @Resilient var dictionary: [String: URL]
