@@ -20,7 +20,7 @@ extension KeyedDecodingContainer {
   /**
    Decodes a `Resilient` dictionary, omitting values as errors are encountered.
    */
-  public func decode<Value>(_ type: Resilient<[String: Value]>.Type, forKey key: Key) throws -> Resilient<[String: Value]>
+  public func decode<Value: Sendable>(_ type: Resilient<[String: Value]>.Type, forKey key: Key) throws -> Resilient<[String: Value]>
   {
     resilientlyDecode(valueForKey: key, fallback: [:]) { $0.resilientlyDecodeDictionary() }
   }
@@ -28,7 +28,7 @@ extension KeyedDecodingContainer {
   /**
    Decodes an optional `Resilient` dictionary. If the field is missing or the value is `nil` the decoded property will also be `nil`.
    */
-  public func decode<Value: Decodable>(_ type: Resilient<[String: Value]?>.Type, forKey key: Key) throws -> Resilient<[String: Value]?> {
+  public func decode<Value: Decodable & Sendable>(_ type: Resilient<[String: Value]?>.Type, forKey key: Key) throws -> Resilient<[String: Value]?> {
     resilientlyDecode(valueForKey: key, fallback: nil) { $0.resilientlyDecodeDictionary().map { $0 } }
   }
 
@@ -36,7 +36,7 @@ extension KeyedDecodingContainer {
 
 extension Decoder {
 
-  func resilientlyDecodeDictionary<Value: Decodable>() -> Resilient<[String: Value]>
+  func resilientlyDecodeDictionary<Value: Decodable & Sendable>() -> Resilient<[String: Value]>
   {
     resilientlyDecodeDictionary(of: Value.self, transform: { $0 })
   }
@@ -44,7 +44,7 @@ extension Decoder {
   /**
    We can't just use `map` because the transform needs to happen _before_ we wrap the value in `Resilient` so that that the value type of `DictionaryDecodingError` is correct.
    */
-  func resilientlyDecodeDictionary<IntermediateValue: Decodable, Value>(
+  func resilientlyDecodeDictionary<IntermediateValue: Decodable, Value: Sendable>(
     of intermediateValueType: IntermediateValue.Type,
     transform: (IntermediateValue) -> Value) -> Resilient<[String: Value]>
   {
@@ -86,11 +86,11 @@ private struct DecodingResultContainer<Success: Decodable>: Decodable {
  For the following cases, the user probably meant to use `[String: T]` as the property type.
  */
 extension KeyedDecodingContainer {
-  public func decode<T: Decodable>(_ type: Resilient<[String: T?]>.Type, forKey key: Key) throws -> Resilient<[T?]> {
+  public func decode<T: Decodable & Sendable>(_ type: Resilient<[String: T?]>.Type, forKey key: Key) throws -> Resilient<[T?]> {
     assertionFailure()
     return try decode(Resilient<[T]>.self, forKey: key).map { $0 }
   }
-  public func decode<T: Decodable>(_ type: Resilient<[String: T?]?>.Type, forKey key: Key) throws -> Resilient<[T?]?> {
+  public func decode<T: Decodable & Sendable>(_ type: Resilient<[String: T?]?>.Type, forKey key: Key) throws -> Resilient<[T?]?> {
     assertionFailure()
     return try decode(Resilient<[T]>.self, forKey: key).map { $0 }
   }
