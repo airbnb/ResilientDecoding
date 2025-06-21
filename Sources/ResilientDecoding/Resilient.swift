@@ -71,6 +71,22 @@ public struct Resilient<Value: Decodable & Sendable>: Decodable, Sendable {
   
 }
 
+// MARK: Equatable
+
+extension Resilient: Equatable where Value: Equatable {
+  public static func ==(lhs: Self, rhs: Self) -> Bool {
+    lhs.wrappedValue == rhs.wrappedValue
+  }
+}
+
+// MARK: Hashable
+
+extension Resilient: Hashable where Value: Hashable {
+  public func hash(into hasher: inout Hasher) {
+    hasher.combine(wrappedValue)
+  }
+}
+
 // MARK: - Decoding Outcome
 
 #if DEBUG
