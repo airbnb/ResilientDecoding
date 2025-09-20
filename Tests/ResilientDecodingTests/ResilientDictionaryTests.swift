@@ -10,7 +10,7 @@ import ResilientDecoding
 #endif
 import XCTest
 
-private struct ResilientDictionaryWrapper: Decodable {
+private struct ResilientDictionaryWrapper: Decodable, Sendable {
   @Resilient var resilientDictionary: [String: Int]
   @Resilient var optionalResilientDictionary: [String: Int]?
 }

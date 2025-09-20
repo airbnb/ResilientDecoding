@@ -5,18 +5,18 @@ import Foundation
 
 extension Resilient {
 
-  init<T>(_ results: [String: Result<T, Error>]) where Value == [String: T] {
+  init<T: Sendable>(_ results: [String: Result<T, Error>]) where Value == [String: T] {
     self.init(results, transform: { $0 })
   }
 
-  init<T>(_ results: [String: Result<T, Error>]) where Value == [String: T]? {
+  init<T: Sendable>(_ results: [String: Result<T, Error>]) where Value == [String: T]? {
     self.init(results, transform: { $0 })
   }
 
   /**
    - parameter transform: While the two lines above both say `{ $0 }` they are actually different because the first one is of type `([String: T]) -> [String: T]` and the second is of type `([String: T]) -> [String: T]?`.
    */
-  private init<T>(_ results: [String: Result<T, Error>], transform: ([String: T]) -> Value) {
+  private init<T: Sendable>(_ results: [String: Result<T, Error>], transform: ([String: T]) -> Value) {
     let dictionary = results.compactMapValues { try? $0.get() }
     let value = transform(dictionary)
     if dictionary.count == results.count {
@@ -41,7 +41,7 @@ extension ResilientDecodingOutcome {
   /**
    A type representing some number of errors encountered while decoding a dictionary
    */
-  public struct DictionaryDecodingError<Value>: Error {
+  public struct DictionaryDecodingError<Value: Sendable>: Error {
     public let results: [String: Result<Value, Error>]
     public var errors: [Error] {
       /// It is currently impossible to have both a `topLevelError` and `results` at the same time, but this code is simpler than having an `enum` nested in this type.
