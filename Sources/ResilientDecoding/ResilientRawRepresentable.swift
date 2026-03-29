@@ -16,7 +16,7 @@ import Foundation
  ```
  then any struct with a `Resilient` property with that type (for instance `@Resilient var myEnum: MyEnum`) will be set to `.unknown` in the event of a decoding failure.
  */
-public protocol ResilientRawRepresentable: Decodable, RawRepresentable where RawValue: Decodable {
+public protocol ResilientRawRepresentable: Decodable, Sendable, RawRepresentable where RawValue: Decodable & Sendable {
 
   associatedtype DecodingFallback
 
