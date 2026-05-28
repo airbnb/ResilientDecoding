@@ -6,6 +6,9 @@ on:
     - main
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   build-macos:
     runs-on: macOS-14
