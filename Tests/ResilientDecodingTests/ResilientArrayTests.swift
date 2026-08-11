@@ -4,7 +4,7 @@
 import ResilientDecoding
 import XCTest
 
-private struct ResilientArrayWrapper: Decodable {
+private struct ResilientArrayWrapper: Decodable, Sendable {
   @Resilient var resilientArray: [Int]
   @Resilient var optionalResilientArray: [Int]?
 }

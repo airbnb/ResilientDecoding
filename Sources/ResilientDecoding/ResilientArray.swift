@@ -22,7 +22,7 @@ extension KeyedDecodingContainer {
   /**
    Decodes a `Resilient` array, omitting elements as errors are encountered.
    */
-  public func decode<Element>(_ type: Resilient<[Element]>.Type, forKey key: Key) throws -> Resilient<[Element]>
+  public func decode<Element: Sendable>(_ type: Resilient<[Element]>.Type, forKey key: Key) throws -> Resilient<[Element]>
     where
       Element: Decodable
   {
@@ -32,7 +32,7 @@ extension KeyedDecodingContainer {
   /**
    Decodes an optional `Resilient` array. A missing key or `nil` value will silently set the property to `nil`.
    */
-  public func decode<Element: Decodable>(_ type: Resilient<[Element]?>.Type, forKey key: Key) throws -> Resilient<[Element]?> {
+  public func decode<Element: Decodable & Sendable>(_ type: Resilient<[Element]?>.Type, forKey key: Key) throws -> Resilient<[Element]?> {
     resilientlyDecode(valueForKey: key, fallback: nil) { $0.resilientlyDecodeArray().map { $0 } }
   }
 
@@ -40,7 +40,7 @@ extension KeyedDecodingContainer {
 
 extension Decoder {
 
-  func resilientlyDecodeArray<Element: Decodable>() -> Resilient<[Element]>
+  func resilientlyDecodeArray<Element: Decodable & Sendable>() -> Resilient<[Element]>
   {
     resilientlyDecodeArray(of: Element.self, transform: { $0 })
   }
@@ -48,7 +48,7 @@ extension Decoder {
   /**
    We can't just use `map` because the transform needs to happen _before_ we wrap the value in `Resilient` so that that the element type of `ArrayDecodingError` is correct.
    */
-  func resilientlyDecodeArray<IntermediateElement: Decodable, Element>(
+  func resilientlyDecodeArray<IntermediateElement: Decodable, Element: Sendable>(
     of intermediateElementType: IntermediateElement.Type,
     transform: (IntermediateElement) -> Element) -> Resilient<[Element]>
   {
@@ -83,11 +83,11 @@ extension Decoder {
  For the following cases, the user probably meant to use `[T]` as the property type.
  */
 extension KeyedDecodingContainer {
-  public func decode<T: Decodable>(_ type: Resilient<[T?]>.Type, forKey key: Key) throws -> Resilient<[T?]> {
+  public func decode<T: Decodable & Sendable>(_ type: Resilient<[T?]>.Type, forKey key: Key) throws -> Resilient<[T?]> {
     assertionFailure()
     return try decode(Resilient<[T]>.self, forKey: key).map { $0 }
   }
-  public func decode<T: Decodable>(_ type: Resilient<[T?]?>.Type, forKey key: Key) throws -> Resilient<[T?]?> {
+  public func decode<T: Decodable & Sendable>(_ type: Resilient<[T?]?>.Type, forKey key: Key) throws -> Resilient<[T?]?> {
     assertionFailure()
     return try decode(Resilient<[T]>.self, forKey: key).map { $0 }
   }
